@@ -3,7 +3,7 @@ Simplifies the already simple canvas api calls, and handles pagenation
 
 
 ``` javascript
-var canvas = require('canvas-api-wrapper')("<ACCESS_TOKEN>")
+var canvas = require('canvas-api-wrapper')("<ACCESS_TOKEN>",'<DOMAIN>')
 var courseId = 12
 
 // gets all 170 pages at the same time in 40 page requests
