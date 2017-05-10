@@ -19,5 +19,5 @@ canvas.call(`courses/${courseId}/pages`,{per_page:40})
 
 ### Install
 ```
-npm i --save https://github.com/byuitechops/canvas-api-wrapper.git
+npm i --save canvas-api-wrapper
 ```
