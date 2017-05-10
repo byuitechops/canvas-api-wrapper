@@ -18,7 +18,7 @@ class Canvas {
 			options = options || {}
 			// fix the front if needed
 			apiCall = apiCall.replace(/^\/api\/v1\/|^api\/v1\/|^\/|^/,'/api/v1/')
-			console.log(this.baseUrl , apiCall , qs.stringify(options))
+//			console.log(this.baseUrl , apiCall , qs.stringify(options))
 			options.access_token = this.accessToken
 			request(this.baseUrl + apiCall + '?' + qs.stringify(options), (error, response, body) => {
 				// some error handling
