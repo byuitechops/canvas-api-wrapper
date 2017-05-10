@@ -17,7 +17,8 @@ class Canvas {
 		return new Promise((resolve, reject) => {
 			options = options || {}
 			// fix the front if needed
-			apiCall = apiCall.replace(/api\/v1\/|^\/|^/,'/api/v1/')
+			apiCall = apiCall.replace(/^\/api\/v1\/|^api\/v1\/|^\/|^/,'/api/v1/')
+			console.log(this.baseUrl , apiCall , qs.stringify(options))
 			options.access_token = this.accessToken
 			request(this.baseUrl + apiCall + '?' + qs.stringify(options), (error, response, body) => {
 				// some error handling
@@ -91,7 +92,7 @@ class Canvas {
 module.exports = function(){
 	var canvas = new Canvas(...arguments)
 	return {
-		call:canvas.call,
-		wrapCall:canvas.wrapCall
+		call:canvas.call.bind(canvas),
+		wrapCall:canvas.wrapCall.bind(canvas)
 	}
 }
