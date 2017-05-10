@@ -3,7 +3,7 @@ Simplifies the already simple canvas api calls, and handles pagenation
 
 
 ``` javascript
-var canvas = require('./main')("<ACCESS_TOKEN>")
+var canvas = require('canvas-api-wrapper')("<ACCESS_TOKEN>")
 var courseId = 12
 
 // gets all 170 pages at the same time in 40 page requests
@@ -15,4 +15,9 @@ canvas.call(`courses/${courseId}/pages`,{per_page:40})
 	.then(console.log)
 	
 	.catch(console.error)
+```
+
+### Install
+```
+npm i --save https://github.com/byuitechops/canvas-api-wrapper.git
 ```
