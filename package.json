@@ -15,8 +15,6 @@
     "API",
     "Wrapper"
   ],
-  "author": "Benjamin Earl",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/byuitechops/canvas-api-wrapper/issues"
   },
@@ -25,5 +23,7 @@
     "async": "^2.4.0",
     "qs": "^6.4.0",
     "request": "^2.81.0"
-  }
+  },
+  "author": "Benjamin Earl",
+  "license": "ISC"
 }
