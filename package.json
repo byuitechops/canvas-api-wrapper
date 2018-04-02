@@ -1,6 +1,6 @@
 {
   "name": "canvas-api-wrapper",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Simplifies the already simple canvas api calls, and handles pagenation",
   "main": "main.js",
   "scripts": {
@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/byuitechops/canvas-api-wrapper#readme",
   "dependencies": {
-    "async": "^2.4.0",
     "callsite": "^1.0.0",
     "got": "^8.3.0",
     "promise-limit": "^2.6.0"
