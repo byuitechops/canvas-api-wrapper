@@ -21,8 +21,9 @@
   "homepage": "https://github.com/byuitechops/canvas-api-wrapper#readme",
   "dependencies": {
     "async": "^2.4.0",
-    "qs": "^6.4.0",
-    "request": "^2.81.0"
+    "callsite": "^1.0.0",
+    "got": "^8.3.0",
+    "promise-limit": "^2.6.0"
   },
   "author": "Benjamin Earl",
   "license": "ISC"
