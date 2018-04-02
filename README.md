@@ -1,5 +1,5 @@
 # canvas-api-wrapper
-Simplifies the already simple canvas api calls, and handles pagenation
+Simplifies the already simple canvas api calls, and handles pagenation and throttling
 
 ## Get Started
 #### Install
@@ -8,7 +8,6 @@ npm i --save canvas-api-wrapper
 ```
 #### Setup
 ``` javascript
-/* main.js */
 var canvas = require('canvas-api-wrapper')
 ```
 Authorization:
