@@ -292,8 +292,8 @@ Doesn't have a create method
 [ModuleItems]: #class-moduleitems "ModuleItems"
 [QuizQuestions]: #class-quizquestions "QuizQuestions"
 
-[Item]: #class-item "Item"
-[File]: #class-file "File"
+[Item]: #classitem "Item"
+[File]: #classfile "File"
 [Page]: #class-page "Page"
 [Quiz]: #class-quiz "Quiz"
 [Module]: #class-module "Module"
