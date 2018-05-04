@@ -134,7 +134,7 @@ for(var i = 0; i < modules.length; i++){
 
 await course.modules.updateAll()
 ```
-### class:Course
+### class: Course
 The main Class which contains all the items
  - `files` <[Files]>
  - `assignments` <[Assignments]>
@@ -143,7 +143,7 @@ The main Class which contains all the items
  - `pages` <[Pages]>
  - `quizzes` <[Quizzes]>
 
-### class:Items
+### class: Items
 The abstract class which all of the lists of items inherit from
 - `course` <[number]> the id of the course
 - `items` <[Array]<[Item]>> the array of children, only comes after 
@@ -176,7 +176,7 @@ Retrieves a single item from canvas by id
 
 Removes an item from canvas, and from the local list
 
-### class:Item
+### class: Item
 The abstract class for the items to inherit from
 
 #### item.getId()
@@ -212,66 +212,66 @@ Use the delete property on [Items] instead
 
 creates the item with all of it's current properties
 
-### class:Assignments
+### class: Assignments
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[Assignment]>>
 
-### class:Assignment
+### class: Assignment
 - extends: [`Item`](#class-item)
 
-### class:Discussions
+### class: Discussions
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[Discussion]>>
 
-### class:Discussion
+### class: Discussion
 - extends: [`Item`](#class-item)
 
-### class:Files
+### class: Files
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[File]>>
 
 Doesn't have a create method 
 
-### class:File
+### class: File
 - extends: [`Item`](#class-item)
 
 Doesn't have a create method 
 
-### class:Modules
+### class: Modules
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[Module]>>
 
-### class:Module
+### class: Module
 - extends: [`Item`](#class-item)
 - `items` <[ModuleItems]> 
 
-### class:ModuleItems
+### class: ModuleItems
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[ModuleItem]>>
 
-### class:ModuleItem
+### class: ModuleItem
 - extends: [`Item`](#class-item)
 
-### class:Pages
+### class: Pages
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[Page]>>
 
-### class:Page
+### class: Page
 - extends: [`Item`](#class-item)
 
-### class:Quizzes
+### class: Quizzes
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[Quiz]>>
 
-### class:Quiz
+### class: Quiz
 - extends: [`Item`](#class-item)
-- `questions` <[QuizQuestions]>]
+- `questions` <[QuizQuestions]>
 
-### class:QuizQuestions
+### class: QuizQuestions
 - extends: [`Items`](#class-items)
 - `items` <[Array]<[QuizQuestion]>>
 
-### class:QuizQuestion
+### class: QuizQuestion
 - extends: [`Item`](#class-item)
 
 [Array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array "Array"
