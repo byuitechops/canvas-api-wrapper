@@ -97,7 +97,7 @@ async function call(blame,path, options = {}) {
       return call(blame,path.href)
     }))
     try{
-      response.body = response.body.concat(...responses.map(res => res.body))
+      response.body = response.body.concat(...responses)
     } catch (e){
       throw new Error('Assumption that paginating body is always an array, was wrong')
     }
