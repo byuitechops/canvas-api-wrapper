@@ -13,6 +13,9 @@ class Course {
     this.pages = new Pages(id)
     this.quizzes = new Quizzes(id)
   }
+  async getSettings(){
+
+  }
 }
 
 /**
@@ -106,11 +109,7 @@ class Items extends Array{
       this.push(item)
     })
     if(includeSub){
-      await Promise.all(this.map(async item => {
-        await Promise.all(item._subs.map(async key => {
-          await item[key].getAll(true)
-        }))
-      }))
+      await Promise.all(this.map(item => item.getSub()))
     }
     return this
   }
@@ -128,12 +127,7 @@ class Items extends Array{
     if(callback){return util.callbackify(this.getOne.bind(this))(...arguments)}
 
     var item = this._constructItem(id)
-    await item.get()
-    if(includeSub){
-      await Promise.all(item._subs.map(async key => {
-        await item[key].getAll(true)
-      }))
-    }
+    await item.get(includeSub)
     this.push(item)
     return item
   }
@@ -271,16 +265,33 @@ class Item {
     return JSON.stringify(this) != this._original 
   }
   /**
+   * Retrieves all of the sub items, and their sub items
+   * @private
+   */
+  async getSub(){
+    await Promise.all(this._subs.map(key => this[key].getAll(true)))
+  }
+  /**
    * Retrieves this item's data from canvas
    * @async
    * @param {function} [callback] If not specified, returns a promise 
    * @return {Item} this
    */
-  async get(callback=undefined){
+  async get(includeSub=false,callback=undefined){
+    if(typeof inclueSub == 'function'){
+      callback = includeSub
+      includeSub = false
+    }
     // Fancy boilerplate to recursivly callbackify if there is a callback
     if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
+    
     var data = await canvas(this.getPath())
     this.setData(data)
+
+    if(includeSub){
+      await this.getSub()
+    }
+    return this
   }
   /**
    * Posts this item's data to canvas
@@ -435,15 +446,17 @@ class Pages extends Items {
     this.childClass = Page
   }
   // Need to add fix for getting the body if requested
-  async getAll(includeSub,callback){
-    await super.getAll(false,callback)
-    if(includeSub){
-      var singleyGotten = await Promise.all(this.map(async page => this.getOne(page.getId())))
-      this.length = 0
-      singleyGotten.forEach(page => this.push(page))
-    }
-    return this
-  }
+  // async getAll(includeSub,callback){
+  //   if(!includeSub){
+  //     return super.getAll(false,callback)
+  //   }
+  //   if(includeSub){
+  //     var singleyGotten = await Promise.all(this.map(async page => this.getOne(page.getId())))
+  //     this.length = 0
+  //     singleyGotten.forEach(page => this.push(page))
+  //   }
+  //   return this
+  // }
 }
 class Page extends Item {
   static get idProp(){ return 'page_id'}
@@ -453,6 +466,9 @@ class Page extends Item {
     this._post = 'wiki_page'
     this._title = 'title'
     this._html = 'body'
+  }
+  async getSub(){
+    return this.get()
   }
 }
 /***********************

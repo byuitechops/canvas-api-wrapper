@@ -134,170 +134,83 @@ for(var i = 0; i < modules.length; i++){
 
 await course.modules.updateAll()
 ```
-### class: Course
+### Course
 The main Class which contains all the items
- - `files` <[Files]>
- - `assignments` <[Assignments]>
- - `discussions` <[Discussions]>
- - `modules` <[Modules]>
- - `pages` <[Pages]>
- - `quizzes` <[Quizzes]>
+ - `files` <**Files**>
+ - `assignments` <**Assignments**>
+ - `discussions` <**Discussions**>
+ - `modules` <**Modules**>
+ - `pages` <**Pages**>
+ - `quizzes` <**Quizzes**>
 
-### class: Items
+### Items _extends_ [Array]
+
 The abstract class which all of the lists of items inherit from
-- `course` <[number]> the id of the course
-- `items` <[Array]<[Item]>> the array of children, only comes after 
 
-#### items.updateAll(callback<sub>_opt_</sub>)
-- returns <[Promise]<>>
+- `course` <**number**>
+	- the id of the course
 
-Updates all of the items, if any changes have been made to them
+- _async_ `updateAll` ( callback<sub>_opt_</sub> )
+	- Updates all of the items that have had changes made to them
 
-#### items.create(data,callback<sub>_opt_</sub>)
-- `data` <[Object]> the properties to add to the created item
-- returns <[Promise]<[Item]>>
+- _async_ `create` ( data , callback<sub>_opt_</sub> ) <**Item**>
+	- Creates the item in canvas, with the given data. And adds it to the items property
+	- `data` <**Object**> the properties to add to the created item
 
-Creates the item in canvas, with the given data. And adds it to the items property
+- _async_ `getAll` ( includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub>  ) <**[Item]**>
+	- Retrieves all of the children items from canvas
+	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz` also whether to include the `body` in the `page` object. Defaults to `false`
 
-#### items.getAll(callback<sub>_opt_</sub>)
-- returns <[Promise]<[Array]<[Items]>>>
+- _async_ `getOne` ( id , includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub> ) <**Item**>
+	- Retrieves a single item from canvas by id
+	- `id` <**number**> the id of the item to grab
+	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
 
-Retrieves all of the children items from canvas
+- _async_ `delete` ( id , callback<sub>_opt_</sub> )
+	- Removes an item from canvas, and from the local list
+	- `id` <**number**> the id of the item to delete
 
-#### items.getOne(id,callback<sub>_opt_</sub>)
-- `id` <[number]> the id of the item to grab
-- returns <[Promise]<[Item]>>
+### Item
 
-Retrieves a single item from canvas by id
-
-#### items.delete(id,callback<sub>_opt_</sub>)
-- `id` <[number]> the id of the item to delete
-- returns <[Promise]<[Item]>>
-
-Removes an item from canvas, and from the local list
-
-### class: Item
 The abstract class for the items to inherit from
 
-#### item.getId()
-- returns <[number]>
+- `getId` ( ) <**number**>
+- `getTitle` ( ) <**string**>
+- `setTitle` ( title<**string**> )
+- `getHtml` ( ) <**string**>
+- `setHtml` ( html<**string**> )
+- _async_ `get` ( includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub> ) <**Item**>
+	- Retrieves the item from canvas
+	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
+- _async_ `update` ( callback<sub>_opt_</sub> )
+	- Only updates if properties have been changed on the Item since it was last gotten
+- _async_ `delete` ( callback<sub>_opt_</sub> )
+	- Use the delete property on [Items] instead, to delete the local copy
+- _async_ `create` ( callback<sub>_opt_</sub> )
+	- creates the item with all of it's current properties
 
-#### item.getTitle()
-- returns <[string]>
+### Assignments _extends_ [Items]
+### Assignment _extends_ [Item]
 
-#### item.setTitle(title)
-- `title` <[string]>
+### Discussions _extends_ [Items]
+### Discussion _extends_ [Item]
 
-#### item.getHtml()
-- returns <[string]>
+### Files _extends_ [Items]
+- Doesn't have a create method
+### File _extends_ [Item]
+- Doesn't have a create method
 
-#### item.setHtml(html)
-- `html` <[string]>
+### Modules _extends_ [Items]
+### Module _extends_ [Item]
+- `items` <**ModuleItems**>
+### ModuleItems _extends_ [Items]
+### ModuleItem _extends_ [Item]
 
-#### item.get(callback<sub>_opt_</sub>)
-- returns <[Promise]<>>
+### Pages _extends_ [Items]
+### Page _extends_ [Item]
 
-#### item.update(callback<sub>_opt_</sub>)
-- returns <[Promise]<>>
-
-Only updates if properties have been changed on the Item since it was last gotten
-
-#### item.delete(callback<sub>_opt_</sub>)
-- returns <[Promise]<>>
-
-Use the delete property on [Items] instead
-
-#### item.create(callback<sub>_opt_</sub>)
-- returns <[Promise]<>>
-
-creates the item with all of it's current properties
-
-### class: Assignments
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[Assignment]>>
-
-### class: Assignment
-- extends: [`Item`](#class-item)
-
-### class: Discussions
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[Discussion]>>
-
-### class: Discussion
-- extends: [`Item`](#class-item)
-
-### class: Files
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[File]>>
-
-Doesn't have a create method 
-
-### class: File
-- extends: [`Item`](#class-item)
-
-Doesn't have a create method 
-
-### class: Modules
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[Module]>>
-
-### class: Module
-- extends: [`Item`](#class-item)
-- `items` <[ModuleItems]> 
-
-### class: ModuleItems
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[ModuleItem]>>
-
-### class: ModuleItem
-- extends: [`Item`](#class-item)
-
-### class: Pages
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[Page]>>
-
-### class: Page
-- extends: [`Item`](#class-item)
-
-### class: Quizzes
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[Quiz]>>
-
-### class: Quiz
-- extends: [`Item`](#class-item)
-- `questions` <[QuizQuestions]>
-
-### class: QuizQuestions
-- extends: [`Items`](#class-items)
-- `items` <[Array]<[QuizQuestion]>>
-
-### class: QuizQuestion
-- extends: [`Item`](#class-item)
-
-[Array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array "Array"
-[boolean]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Boolean_type "Boolean"
-[function]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function "Function"
-[number]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type "Number"
-[Object]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object "Object"
-[Promise]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise "Promise"
-[string]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#String_type "String"
-[Course]: #class-course "Course"
-[Items]: #class-items "Items"
-[Files]: #class-files "Files"
-[Pages]: #class-pages "Pages"
-[Quizzes]: #class-quizzes "Quizzes"
-[Modules]: #class-modules "Modules"
-[Assignments]: #class-assignments "Assignments"
-[Discussions]: #class-discussions "Discussions"
-[ModuleItems]: #class-moduleitems "ModuleItems"
-[QuizQuestions]: #class-quizquestions "QuizQuestions"
-
-[Item]: #class-item "Item"
-[File]: #class-file "File"
-[Page]: #class-page "Page"
-[Quiz]: #class-quiz "Quiz"
-[Module]: #class-module "Module"
-[Assignment]: #class-assignment "Assignment"
-[Discussion]: #class-discussion "Discussion"
-[ModuleItem]: #class-moduleitem "ModuleItem"
-[QuizQuestion]: #class-quizquestion "QuizQuestion"
+### Quizzes _extends_ [Items]
+### Quiz _extends_ [Item]
+- `questions` <**QuizQuestions**>
+### QuizQuestions _extends_ [Items]
+### QuizQuestion _extends_ [Item]
