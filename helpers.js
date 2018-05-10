@@ -442,6 +442,7 @@ class Pages extends Items {
       this.length = 0
       singleyGotten.forEach(page => this.push(page))
     }
+    return this
   }
 }
 class Page extends Item {
