@@ -445,18 +445,6 @@ class Pages extends Items {
     super(id)
     this.childClass = Page
   }
-  // Need to add fix for getting the body if requested
-  // async getAll(includeSub,callback){
-  //   if(!includeSub){
-  //     return super.getAll(false,callback)
-  //   }
-  //   if(includeSub){
-  //     var singleyGotten = await Promise.all(this.map(async page => this.getOne(page.getId())))
-  //     this.length = 0
-  //     singleyGotten.forEach(page => this.push(page))
-  //   }
-  //   return this
-  // }
 }
 class Page extends Item {
   static get idProp(){ return 'page_id'}
