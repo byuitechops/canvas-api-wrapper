@@ -3,7 +3,7 @@ const canvas = require('./canvas')
 
 class Course {
   constructor(id){
-    if(typeof id != 'number'){
+    if(id == undefined){
       throw new TypeError("Expected the id of the course")
     }
     this.files = new Files(id)
@@ -21,14 +21,24 @@ class Course {
  * @public   @prop {array}  items - the list of items it contains (only initalized after get functions)
  * @private @abstract @prop {Class}  childClass - the class used for the children
  */
-class Items {
+class Items extends Array{
   constructor(id){
-    if(typeof id != 'number'){
+    if(id == undefined){
       throw new TypeError("Items expected the id of the course")
     }
+    super()
     this.course = id
-    this.items = null
+    Object.defineProperty(this,'childClass',{
+      writable:true,
+      enumerable:false
+    })
   }
+  /**
+   * Not really sure what this line does, 
+   * but it makes things not mess up as badly when doing slice and such
+   * ( doing slice on this class returns just the array of sub items without this class wrapping it )
+   */
+  static get [Symbol.species]() { return Array; }
   /**
    * Constructs an instance of the child class
    * @private
@@ -48,7 +58,7 @@ class Items {
    * @return {Item}
    */
   _classify(data){
-    var item = this._constructItem(data.id)
+    var item = this._constructItem(data[this.childClass.idProp])
     item.setData(data)
     return item
   }
@@ -58,12 +68,9 @@ class Items {
    * @param {Function} [callback] - If not specified, returns a promise
    */
   async updateAll(callback=undefined){
-    if(this.items == null){
-      throw new ReferenceError("Expected there to be items to update")
-    }
     if(callback){return util.callbackify(this.updateAll.bind(this))(...arguments)}
 
-    await Promise.all(this.items.map(item => item.update())) 
+    await Promise.all(this.map(item => item.update())) 
   }
   /**
    * Creates an Item
@@ -78,8 +85,7 @@ class Items {
     var item = this._constructItem()
     item.setData(data)
     await item.create()
-    this.items = this.items || []
-    this.items.push(item)
+    this.push(item)
     return item
   }
   /**
@@ -87,12 +93,26 @@ class Items {
    * @async
    * @param {function} [callback] - If not specified, returns a promise 
    */
-  async getAll(callback=undefined){
+  async getAll(includeSub=false,callback=undefined){
+    if(typeof inclueSub == 'function'){
+      callback = includeSub
+      includeSub = false
+    }
     if(callback){return util.callbackify(this.getAll.bind(this))(...arguments)}
 
     var data = await canvas(this._constructItem().getPath(false))
-    this.items = data.map(datum => this._classify(datum))
-    return this.items
+    data.forEach(datum => {
+      var item = this._classify(datum)
+      this.push(item)
+    })
+    if(includeSub){
+      await Promise.all(this.map(async item => {
+        await Promise.all(item._subs.map(async key => {
+          await item[key].getAll(true)
+        }))
+      }))
+    }
+    return this
   }
   /**
    * Retrieves a single item from canvas
@@ -100,13 +120,21 @@ class Items {
    * @param {number} id - The id of the item to get
    * @param {function} [callback] - If not specified, returns a promise 
    */
-  async getOne(id,callback=undefined){
+  async getOne(id,includeSub=false,callback=undefined){
+    if(typeof inclueSub == 'function'){
+      callback = includeSub
+      includeSub = false
+    }
     if(callback){return util.callbackify(this.getOne.bind(this))(...arguments)}
 
     var item = this._constructItem(id)
     await item.get()
-    this.items = this.items || []
-    this.items.push(item)
+    if(includeSub){
+      await Promise.all(item._subs.map(async key => {
+        await item[key].getAll(true)
+      }))
+    }
+    this.push(item)
     return item
   }
   /**
@@ -116,17 +144,14 @@ class Items {
    * @param {function} [callback] If not specified, returns a promise 
    */
   async delete(id,callback=undefined){
-    if(this.items == null){
-      throw new ReferenceError("Expected items to be initialized")
-    }
     if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
 
-    var foundIndex = this.items.findIndex(n => n.getId() == id)
+    var foundIndex = this.findIndex(n => n.getId() == id)
     if(foundIndex == -1) throw new Error("Can't delete an item that does not exist");
 
-    await this.items[foundIndex].delete()
+    await this[foundIndex].delete()
 
-    this.items.splice(foundIndex,1)
+    this.splice(foundIndex,1)
   }
 }
 
@@ -135,6 +160,7 @@ class Items {
  * @private @prop {number} _course - the id of the course
  * @private @prop {number} _id - the id of the item
  * @private @prop {string} _original - the original values from canvas stringified
+ * @private @abstract @prop {array} _subs - the property names of the sub items
  * @private @abstract @prop {string} _post - the name of the property to wrap the data in if any 
  * @private @abstract @prop {string} _path - the path used to create the url
  * @private @abstract @prop {string} _html - the property name to access the html of the object
@@ -154,12 +180,17 @@ class Item {
         value: '{}',
         writable: true 
       },
+      _subs: { 
+        value: [],
+        writable: true 
+      },
       _post: { writable: true },
       _path: { writable: true },
       _html: { writable: true },
       _title: { writable: true },
     })
   }
+  static get idProp(){ return 'id' }
   /**
    * Set the data of the item
    *  - purges the old data
@@ -170,13 +201,13 @@ class Item {
   setData(data){
     // Purge all of the old data
     for(var prop in this){
-      if(this.hasOwnProperty(prop) && prop[0] != '_'){
+      if(this.hasOwnProperty(prop) && Object.getOwnPropertyDescriptor(this,prop).configurable){
         delete this[prop]
       }
     }
     // Save the data
-    this._original = JSON.stringify(data)
     Object.assign(this,data)
+    this._original = JSON.stringify(this)
   }
   /**
    * Creates the post body, wraping it if _post is specified
@@ -236,7 +267,9 @@ class Item {
    * @private
    * @return {boolean}
    */
-  hasChanged(){ return JSON.stringify(this) != this._original }
+  hasChanged(){ 
+    return JSON.stringify(this) != this._original 
+  }
   /**
    * Retrieves this item's data from canvas
    * @async
@@ -367,12 +400,12 @@ class Module extends Item {
     this._path = 'modules'
     this._post = 'module'
     this._title = 'name'
-    Object.defineProperty(this,'_items',{
-      value: new ModuleItems(course,id),
-      writable:false
+    this._subs = ['items']
+    Object.defineProperty(this,'items',{
+      value:new ModuleItems(course,id),
+      enumerable:true,
     })
   }
-  get items(){ return this._items }
 }
 class ModuleItems extends Items {
   constructor(courseId,moduleId){
@@ -387,7 +420,7 @@ class ModuleItems extends Items {
 class ModuleItem extends Item {
   constructor(course,module,id){
     super(course,id)
-    Object.defineProperty(this,'_module',{value:module,writable:false})
+    Object.defineProperty(this,'_module',{value:module})
     this._path = `modules/${this._module}/items`
     this._post = 'module_item'
     this._title = 'title'
@@ -401,8 +434,18 @@ class Pages extends Items {
     super(id)
     this.childClass = Page
   }
+  // Need to add fix for getting the body if requested
+  async getAll(includeSub,callback){
+    await super.getAll(false,callback)
+    if(includeSub){
+      var singleyGotten = await Promise.all(this.map(async page => this.getOne(page.getId())))
+      this.length = 0
+      singleyGotten.forEach(page => this.push(page))
+    }
+  }
 }
 class Page extends Item {
+  static get idProp(){ return 'page_id'}
   constructor(course,id){
     super(course,id)
     this._path = 'pages'
@@ -427,12 +470,12 @@ class Quiz extends Item {
     this._post = 'quiz'
     this._title = 'title'
     this._html = 'description'
-    Object.defineProperty(this,'_questions',{
+    this._subs = ['questions']
+    Object.defineProperty(this,'questions',{
       value: new QuizQuestions(course,this.getId()),
-      writable:false
+      enumerable:true
     })
   }
-  get questions(){ return this._questions }
 }
 class QuizQuestions extends Items {
   constructor(courseId,quizId){

@@ -5,20 +5,18 @@ const url = require('url')
 const util = require('util')
 
 const settings = {
-  domain:'byui',
   apiToken: process.env.CANVAS_API_TOKEN || '',
-  rateLimitBuffer: 300,
-  callLimit: 30,
   minSendInterval: 10,
   checkStatusInterval: 2000,
+  domain:'byui'
 }
 
 // I hate global variables, but somehow I need to save info from call to call
-let queue = promiseLimit(settings.callLimit),
+let queue = promiseLimit(30),
   nextSendTime = Date.now(),
   lastOverBuffer = 0,
-  baseUrl= `https://${settings.domain}.instructure.com`,
-  rateLimitRemaining = 700
+  rateLimitRemaining = 700,
+  baseUrl = `https://${settings.domain}.instructure.com`
 
 // The center of the universe
 async function call(blame,path, options = {}) {
@@ -127,7 +125,7 @@ function parseLink(str){
 }
 
 // Is responsible for our making our crazy function signiture
-module.exports = function canvas(){
+function canvas(){
   if(!settings.apiToken){
     throw new Error('Canvas API Token was not set')
   }
@@ -144,11 +142,25 @@ module.exports = function canvas(){
   return call.call(this,blame,...args)
 }
 
-module.exports.settings = settings
-module.exports.setCallLimit = function(callLimit){
-  if(queue.queue == 0){
-    queue = promiseLimit(callLimit)
-  } else {
-    throw new Error("Can't change the queue size while the queue is in operation")
-  }
-}
+Object.defineProperties(canvas,{
+  apiToken:{ set: val => settings.apiToken = val },
+  minSendInterval:{ set: val => settings.minSendInterval = val },
+  checkStatusInterval:{ set: val => settings.checkStatusInterval = val },
+  domain:{ 
+    set: val => {
+      settings.domain = val 
+      baseUrl = `https://${settings.domain}.instructure.com`
+    }
+  },
+  callLimit:{ 
+    set: val => {
+      if(queue.queue == 0){
+        queue = promiseLimit(val)
+      } else {
+        throw new Error("Can't change the queue size while the queue is in operation")
+      }
+    }
+  },
+})
+
+module.exports = canvas
