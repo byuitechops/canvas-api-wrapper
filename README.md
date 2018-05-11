@@ -180,6 +180,7 @@ The abstract class for the items to inherit from
 - **`setTitle`** ( title<**string**> )
 - **`getHtml`** ( ) <**string**>
 - **`setHtml`** ( html<**string**> )
+- **`getUrl`** ( ) <**string**>
 - _async_ **`get`** ( includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub> ) <**Item**>
 	- Retrieves the item from canvas
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`

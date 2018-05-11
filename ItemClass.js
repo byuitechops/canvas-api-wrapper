@@ -111,7 +111,11 @@ module.exports = class Item {
     if(!this._url){
       throw new TypeError("Classes extending the Items class did not define a _url property")
     }
-    return this._url 
+    if(this._url.includes('http')){
+      return this._url
+    } else {
+      return this[this._url]
+    }
   }
   /** @return {string} - item's id */
   getId(){ return this._id }
