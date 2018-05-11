@@ -225,4 +225,5 @@ The abstract class for the items to inherit from
 | ModuleItem | title |  | html_url | |
 | Page | title | body | html_url | |
 | Quizzes | title | description | html_url | <li>questions</li> |
-| QuizQuestion | question_name | question_text | https://<_domain_>.instructure.com/courses/<_course_>/quizzes/<_quiz_>/edit#question_<_id_> |
+| QuizQuestion | question_name | question_text | https://<_domain_>.instructure.com/courses/<_course_>/quizzes/<_quiz_>/edit#question_<_id_> | |
+

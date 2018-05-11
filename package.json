@@ -1,6 +1,6 @@
 {
   "name": "canvas-api-wrapper",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "description": "Simplifies the already simple canvas api calls, and handles pagenation",
   "main": "main.js",
   "scripts": {
