@@ -92,6 +92,9 @@ module.exports = class Items extends Array{
     }
     if(callback){return util.callbackify(this.getAll.bind(this))(...arguments)}
 
+    // clear our current array
+    this.length = 0
+
     var data = await canvas(this._constructItem().getPath(false))
     data.forEach(datum => {
       var item = this._classify(datum)

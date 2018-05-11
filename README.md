@@ -201,6 +201,9 @@ The abstract class for the items to inherit from
 ### File _extends_ **Item**
 - Doesn't have a create method
 
+### Folders _extends_ **Items**
+### Folders _extends_ **Item**
+
 ### Modules _extends_ **Items**
 ### Module _extends_ **Item**
 - **`items`** <**ModuleItems**>
@@ -224,6 +227,7 @@ The abstract class for the items to inherit from
 | Assignment | name | description | html_url | |
 | Discussion | title | message | html_url | |
 | File | display_name |  | url | |
+| Folder | name | | folders_url | |
 | Module | name | | courses/<_course_>/modules#context_module_<_id_> | items |
 | ModuleItem | title |  | html_url | |
 | Page | title | body | html_url | |

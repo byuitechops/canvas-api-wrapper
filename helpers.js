@@ -12,12 +12,16 @@ class Course extends Item{
     this._post = 'course'
     this._title = 'name'
     this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}`
-    this._subs = ['files','assignments','discussions','modules','pages','quizzes']
+    this._subs = ['files','folders','assignments','discussions','modules','pages','quizzes']
 
     Object.defineProperties(this,{
       files: {
         value:new Files(course),
         enumerable:true
+      },
+      folders: {
+        value:new Folders(course),
+        enumerable: true
       },
       assignments: {
         value:new Assignments(course),
@@ -104,6 +108,29 @@ class File extends Item {
   setTitle(value){
     super.setTitle(value)
     this.name = value
+  }
+}
+/***********************
+* Folders
+************************/
+class Folders extends Items {
+  constructor(id){
+    super(id)
+    this.childClass = Folder
+  }
+}
+class Folder extends Item {
+  constructor(course,id){
+    super(course,id)
+    this._path = 'folders'
+    this._title = 'name'
+    this._url = 'folders_url'
+  }
+  getPath(includeId=true){
+    if(!includeId){
+      return super.getPath(false)
+    }
+    return `/api/v1/folders/${this._id}`
   }
 }
 /***********************
