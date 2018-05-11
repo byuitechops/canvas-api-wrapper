@@ -84,21 +84,21 @@ module.exports = class Item {
     if(!this._html){
       throw new TypeError("Class extending the Item class did not define a _html property")
     }
-    return this[this._html]
+    return this[this._html] || ""
   }
   /** @param {string} - item's html */
   setHtml(val){ 
     if(!this._html){
       throw new TypeError("Class extending the Item class did not define a _html property")
     }
-    this[this._html] = val 
+    this[this._html] = val
   }
   /** @return {string} - item's title */
   getTitle(){ 
     if(!this._title){
       throw new TypeError("Class extending the Item class did not define a _title property")
     }
-    return this[this._title] 
+    return this[this._title] || ""
   }
   /** @param {string} - item's title */
   setTitle(val){ 
