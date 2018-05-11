@@ -150,7 +150,8 @@ Object.defineProperties(canvas,{
     set: val => {
       settings.domain = val 
       baseUrl = `https://${settings.domain}.instructure.com`
-    }
+    },
+    get: () => settings.domain
   },
   callLimit:{ 
     set: val => {

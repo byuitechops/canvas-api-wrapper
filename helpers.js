@@ -1,341 +1,47 @@
-const util = require('util')
 const canvas = require('./canvas')
+const Items = require('./ItemsClass')
+const Item = require('./ItemClass')
 
-class Course {
-  constructor(id){
-    if(id == undefined){
-      throw new TypeError("Expected the id of the course")
-    }
-    this.files = new Files(id)
-    this.assignments = new Assignments(id)
-    this.discussions = new Discussions(id)
-    this.modules = new Modules(id)
-    this.pages = new Pages(id)
-    this.quizzes = new Quizzes(id)
-  }
-  async getSettings(){
+/***********************
+* Course
+************************/
+class Course extends Item{
+  constructor(course){
+    super(course,course)
 
-  }
-}
+    this._post = 'assignment'
+    this._title = 'name'
+    this._subs = ['files','assignments','discussions','modules','pages','quizzes']
 
-/**
- * An abstract class which acts as a container for the different types of items
- * @public   @prop {number} course - the id of the course
- * @public   @prop {array}  items - the list of items it contains (only initalized after get functions)
- * @private @abstract @prop {Class}  childClass - the class used for the children
- */
-class Items extends Array{
-  constructor(id){
-    if(id == undefined){
-      throw new TypeError("Items expected the id of the course")
-    }
-    super()
-    this.course = id
-    Object.defineProperty(this,'childClass',{
-      writable:true,
-      enumerable:false
-    })
-  }
-  /**
-   * Not really sure what this line does, 
-   * but it makes things not mess up as badly when doing slice and such
-   * ( doing slice on this class returns just the array of sub items without this class wrapping it )
-   */
-  static get [Symbol.species]() { return Array; }
-  /**
-   * Constructs an instance of the child class
-   * @private
-   * @param {number} id
-   * @return {Item}
-   */
-  _constructItem(id){
-    if(!this.childClass){
-      throw new TypeError("Classes extending the Items class needs childClass defined")
-    }
-    return new this.childClass(this.course,id)
-  }
-  /**
-   * Creates an instance of the child class and assigns it the data passed
-   * @private
-   * @param {Object} data 
-   * @return {Item}
-   */
-  _classify(data){
-    var item = this._constructItem(data[this.childClass.idProp])
-    item.setData(data)
-    return item
-  }
-  /**
-   * Updates all of the items
-   * @async
-   * @param {Function} [callback] - If not specified, returns a promise
-   */
-  async updateAll(callback=undefined){
-    if(callback){return util.callbackify(this.updateAll.bind(this))(...arguments)}
-
-    await Promise.all(this.map(item => item.update())) 
-  }
-  /**
-   * Creates an Item
-   * @async
-   * @param {Object} data - The properties used to create the item
-   * @param {Function} [callback] - If not specified, returns a promise 
-   */
-  async create(data, callback=undefined){
-
-    if(callback){return util.callbackify(this.create.bind(this))(...arguments)}
-
-    var item = this._constructItem()
-    item.setData(data)
-    await item.create()
-    this.push(item)
-    return item
-  }
-  /**
-   * Retrieves all of the items from canvas
-   * @async
-   * @param {function} [callback] - If not specified, returns a promise 
-   */
-  async getAll(includeSub=false,callback=undefined){
-    if(typeof inclueSub == 'function'){
-      callback = includeSub
-      includeSub = false
-    }
-    if(callback){return util.callbackify(this.getAll.bind(this))(...arguments)}
-
-    var data = await canvas(this._constructItem().getPath(false))
-    data.forEach(datum => {
-      var item = this._classify(datum)
-      this.push(item)
-    })
-    if(includeSub){
-      await Promise.all(this.map(item => item.getSub()))
-    }
-    return this
-  }
-  /**
-   * Retrieves a single item from canvas
-   * @async
-   * @param {number} id - The id of the item to get
-   * @param {function} [callback] - If not specified, returns a promise 
-   */
-  async getOne(id,includeSub=false,callback=undefined){
-    if(typeof inclueSub == 'function'){
-      callback = includeSub
-      includeSub = false
-    }
-    if(callback){return util.callbackify(this.getOne.bind(this))(...arguments)}
-
-    var item = this._constructItem(id)
-    await item.get(includeSub)
-    this.push(item)
-    return item
-  }
-  /**
-   * Removes an item from canvas, and from the local list
-   * @async
-   * @param {number} id - The id of the item to delete
-   * @param {function} [callback] If not specified, returns a promise 
-   */
-  async delete(id,callback=undefined){
-    if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
-
-    var foundIndex = this.findIndex(n => n.getId() == id)
-    if(foundIndex == -1) throw new Error("Can't delete an item that does not exist");
-
-    await this[foundIndex].delete()
-
-    this.splice(foundIndex,1)
-  }
-}
-
-/**
- * An abstract class for the different types of items to inherit from
- * @private @prop {number} _course - the id of the course
- * @private @prop {number} _id - the id of the item
- * @private @prop {string} _original - the original values from canvas stringified
- * @private @abstract @prop {array} _subs - the property names of the sub items
- * @private @abstract @prop {string} _post - the name of the property to wrap the data in if any 
- * @private @abstract @prop {string} _path - the path used to create the url
- * @private @abstract @prop {string} _html - the property name to access the html of the object
- * @private @abstract @prop {string} _title - the property name to access the title of the object
- */
-class Item {
-  constructor(course,id){
     Object.defineProperties(this,{
-      _course:{
-        value:course
+      files: {
+        value:new Files(course),
+        enumerable:true
       },
-      _id: {
-        value:id,
-        writable: true,
+      assignments: {
+        value:new Assignments(course),
+        enumerable:true
       },
-      _original: { 
-        value: '{}',
-        writable: true 
+      discussions: {
+        value:new Discussions(course),
+        enumerable:true
       },
-      _subs: { 
-        value: [],
-        writable: true 
+      modules: {
+        value:new Modules(course),
+        enumerable:true
       },
-      _post: { writable: true },
-      _path: { writable: true },
-      _html: { writable: true },
-      _title: { writable: true },
-    })
-  }
-  static get idProp(){ return 'id' }
-  /**
-   * Set the data of the item
-   *  - purges the old data
-   *  - sets the _original
-   * @private
-   * @param {Object} data 
-   */
-  setData(data){
-    // Purge all of the old data
-    for(var prop in this){
-      if(this.hasOwnProperty(prop) && Object.getOwnPropertyDescriptor(this,prop).configurable){
-        delete this[prop]
+      pages: {
+        value:new Pages(course),
+        enumerable:true
+      },
+      quizzes: {
+        value:new Quizzes(course),
+        enumerable:true
       }
-    }
-    // Save the data
-    Object.assign(this,data)
-    this._original = JSON.stringify(this)
-  }
-  /**
-   * Creates the post body, wraping it if _post is specified
-   * @private
-   * @return {Object} - postbody
-   */
-  getPostbody(){
-    var top = {}
-    var postbody = this._post ? top[this._post] = {} : top
-    Object.assign(postbody,this)
-    return top
-  }
-  /**
-   * Creates the url with the internal ids, dosen't specify last id if asked
-   * @private
-   * @param {boolean} includeId 
-   * @return {string} - path
-   */
-  getPath(includeId=true){
-    if(!this._path){
-      throw new TypeError("Classes extending the Item class needs _path defined")
-    }
-    return `/api/v1/courses/${this._course}/${this._path}/${includeId ? this._id : ''}`
-  }
-  /** @return {string} - item's html */
-  getHtml(){
-    if(!this._html){
-      throw new TypeError("Class extending the Item class did not define a _html property")
-    }
-    return this[this._html]
-  }
-  /** @param {string} - item's html */
-  setHtml(val){ 
-    if(!this._html){
-      throw new TypeError("Class extending the Item class did not define a _html property")
-    }
-    this[this._html] = val 
-  }
-  /** @return {string} - item's title */
-  getTitle(){ 
-    if(!this._title){
-      throw new TypeError("Class extending the Item class did not define a _title property")
-    }
-    return this[this._title] 
-  }
-  /** @param {string} - item's title */
-  setTitle(val){ 
-    if(!this._title){
-      throw new TypeError("Class extending the Item class did not define a _title property")
-    }
-    this[this._title] = val 
-  }
-  /** @return {string} - item's id */
-  getId(){ return this._id }
-  /**
-   * Checks to see if this item's properties have changed since the last setData
-   * @private
-   * @return {boolean}
-   */
-  hasChanged(){ 
-    return JSON.stringify(this) != this._original 
-  }
-  /**
-   * Retrieves all of the sub items, and their sub items
-   * @private
-   */
-  async getSub(){
-    await Promise.all(this._subs.map(key => this[key].getAll(true)))
-  }
-  /**
-   * Retrieves this item's data from canvas
-   * @async
-   * @param {function} [callback] If not specified, returns a promise 
-   * @return {Item} this
-   */
-  async get(includeSub=false,callback=undefined){
-    if(typeof inclueSub == 'function'){
-      callback = includeSub
-      includeSub = false
-    }
-    // Fancy boilerplate to recursivly callbackify if there is a callback
-    if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
-    
-    var data = await canvas(this.getPath())
-    this.setData(data)
-
-    if(includeSub){
-      await this.getSub()
-    }
-    return this
-  }
-  /**
-   * Posts this item's data to canvas
-   * @async
-   * @param {function} [callback] If not specified, returns a promise 
-   */
-  async update(callback=undefined){
-    // If nothing has changed then don't bother
-    if(!this.hasChanged()) return;
-    if(callback){return util.callbackify(this.update.bind(this))(...arguments)}
-    var data = await canvas(this.getPath(),{
-      method: 'PUT',
-      body: this.getPostbody()
     })
-    this.setData(data)
   }
-  /**
-  * Deletes the item from canvas
-  * @async
-  * @param {function} [callback] If not specified, returns a promise 
-  */
-  async delete(callback=undefined){
-    if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
-
-    var data = await canvas(this.getPath(),{
-      method:'DELETE'
-    })
-    this.setData(data)
-  }
-  /**
-   * Creates the item in canvas, with whatever properties it contains
-   * @async
-   * @param {function} [callback] If not specified, returns a promise 
-   */
-  async create(callback=undefined){
-    if(callback){return util.callbackify(this.create.bind(this))(...arguments)}
-
-    var data = await canvas(this.getPath(false),{
-      method:'POST',
-      body: this.getPostbody()
-    })
-    this.setData(data)
-    this._id = data.id
-    return this
+  getPath(){
+    return `/api/v1/courses/${this._course}`
   }
 }
 
@@ -355,6 +61,7 @@ class Assignment extends Item {
     this._post = 'assignment'
     this._title = 'name'
     this._html = 'description'
+    this._url = 'html_url'
   }
 }
 /***********************
@@ -372,6 +79,7 @@ class Discussion extends Item {
     this._path = 'discussion_topics'
     this._title = 'title'
     this._html = 'message'
+    this._url = 'html_url'
   }
 }
 /***********************
@@ -381,7 +89,7 @@ class Files extends Items {
   constructor(id){
     super(id)
     this.childClass = File
-    this.create = undefined
+    delete this.create
   }
 }
 class File extends Item {
@@ -389,7 +97,8 @@ class File extends Item {
     super(course,id)
     this._path = 'files'
     this._title = 'display_name'
-    this.create = undefined
+    this._url = 'url'
+    delete this.create
   }
   setTitle(value){
     super.setTitle(value)
@@ -411,6 +120,7 @@ class Module extends Item {
     this._path = 'modules'
     this._post = 'module'
     this._title = 'name'
+    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}/modules#context_module_${this._id}`
     this._subs = ['items']
     Object.defineProperty(this,'items',{
       value:new ModuleItems(course,id),
@@ -435,6 +145,7 @@ class ModuleItem extends Item {
     this._path = `modules/${this._module}/items`
     this._post = 'module_item'
     this._title = 'title'
+    this._url = 'html_url'
   }
 }
 /***********************
@@ -454,6 +165,7 @@ class Page extends Item {
     this._post = 'wiki_page'
     this._title = 'title'
     this._html = 'body'
+    this._url = 'html_url'
   }
   async getSub(){
     return this.get()
@@ -475,6 +187,7 @@ class Quiz extends Item {
     this._post = 'quiz'
     this._title = 'title'
     this._html = 'description'
+    this._url = 'html_url'
     this._subs = ['questions']
     Object.defineProperty(this,'questions',{
       value: new QuizQuestions(course,this.getId()),
@@ -500,10 +213,15 @@ class QuizQuestion extends Item {
     this._post = 'question'
     this._title = 'question_name'
     this._html = 'question_text'
+    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}/quizzes/${this._quiz}/edit#question_${this._id}`
   }
 }
 
 // All of this file's exports will be added to the main canvas object
-module.exports.getCourse = function getCourse(id){
-  return new Course(id)
+module.exports.getCourse = async function getCourse(id){
+  if(id == undefined){
+    throw new TypeError("Expected the id of the course")
+  }
+  var course = new Course(id)
+  return course
 }
