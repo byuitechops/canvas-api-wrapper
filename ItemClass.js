@@ -107,10 +107,15 @@ module.exports = class Item {
     }
     this[this._title] = val 
   }
+  getUrl(){ 
+    if(!this._url){
+      throw new TypeError("Classes extending the Items class did not define a _url property")
+    }
+    return this._url 
+  }
   /** @return {string} - item's id */
   getId(){ return this._id }
   /** @return {string} - item's Url */
-  getUrl(){ return this._url }
   /**
    * Checks to see if this item's properties have changed since the last setData
    * @private

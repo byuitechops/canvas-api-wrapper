@@ -214,3 +214,15 @@ The abstract class for the items to inherit from
 - **`questions`** <**QuizQuestions**>
 ### QuizQuestions _extends_ **Items**
 ### QuizQuestion _extends_ **Item**
+
+| Type | Title | Html | Url | Sub Items Lists |
+|------------|-------|------|-----|------|
+| Course | name | | https://<_domain_>.instructure.com/courses/<_course_> | <li>files</li><li>assignments</li><li>discussions</li><li>modules</li><li>pages</li><li>quizzes</li> |
+| Assignment | name | description | html_url | |
+| Discussion | title | message | html_url | |
+| File | display_name |  | url | |
+| Module | name | | https://<_domain_>.instructure.com/courses/<_course_>/modules#context_module_<_id_> | <li>items</li> |
+| ModuleItem | title |  | html_url | |
+| Page | title | body | html_url | |
+| Quizzes | title | description | html_url | <li>questions</li> |
+| QuizQuestion | question_name | question_text | https://<_domain_>.instructure.com/courses/<_course_>/quizzes/<_quiz_>/edit#question_<_id_> |

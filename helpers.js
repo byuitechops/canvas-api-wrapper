@@ -9,8 +9,9 @@ class Course extends Item{
   constructor(course){
     super(course,course)
 
-    this._post = 'assignment'
+    this._post = 'course'
     this._title = 'name'
+    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}`
     this._subs = ['files','assignments','discussions','modules','pages','quizzes']
 
     Object.defineProperties(this,{
