@@ -9,9 +9,10 @@ npm i --save canvas-api-wrapper
 #### Setup
 ``` javascript
 var canvas = require('canvas-api-wrapper')
+canvas.domain = '<sub domain>' // default: byui
 ```
 Authorization:
-```
+```js
 canvas.apiToken = '<TOKEN>'
 ```
 ``` bash
