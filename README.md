@@ -215,15 +215,17 @@ The abstract class for the items to inherit from
 ### QuizQuestions _extends_ **Items**
 ### QuizQuestion _extends_ **Item**
 
+
+## Item Gets and Sets
 | Type | Title | Html | Url | Sub Items Lists |
 |------------|-------|------|-----|------|
-| Course | name | | https://<_domain_>.instructure.com/courses/<_course_> | <li>files</li><li>assignments</li><li>discussions</li><li>modules</li><li>pages</li><li>quizzes</li> |
+| Course | name | | /courses/<_course_> | files, assignments, discussions, modules, pages, quizzes |
 | Assignment | name | description | html_url | |
 | Discussion | title | message | html_url | |
 | File | display_name |  | url | |
-| Module | name | | https://<_domain_>.instructure.com/courses/<_course_>/modules#context_module_<_id_> | <li>items</li> |
+| Module | name | | courses/<_course_>/modules#context_module_<_id_> | items |
 | ModuleItem | title |  | html_url | |
 | Page | title | body | html_url | |
-| Quizzes | title | description | html_url | <li>questions</li> |
-| QuizQuestion | question_name | question_text | https://<_domain_>.instructure.com/courses/<_course_>/quizzes/<_quiz_>/edit#question_<_id_> | |
+| Quizzes | title | description | html_url | questions |
+| QuizQuestion | question_name | question_text | courses/<_course_>/quizzes/<_quiz_>/edit#question_<_id_> | |
 
