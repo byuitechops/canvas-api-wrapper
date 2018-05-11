@@ -102,7 +102,7 @@ class File extends Item {
     super(course,id)
     this._path = 'files'
     this._title = 'display_name'
-    this._url = 'url'
+    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}/files/?preview=${this._id}`
     delete this.create
   }
   setTitle(value){
