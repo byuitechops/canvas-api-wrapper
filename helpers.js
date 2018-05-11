@@ -218,7 +218,7 @@ class QuizQuestion extends Item {
 }
 
 // All of this file's exports will be added to the main canvas object
-module.exports.getCourse = async function getCourse(id){
+module.exports.getCourse = function getCourse(id){
   if(id == undefined){
     throw new TypeError("Expected the id of the course")
   }
