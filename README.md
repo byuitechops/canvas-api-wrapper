@@ -300,13 +300,13 @@ canvas.checkStatusInterval = 2000;
 | Course | name | | /courses/<_course_> | files, assignments, discussions, modules, pages, quizzes |
 | Assignment | name | description | html_url | |
 | Discussion | title | message | html_url | |
-| File | display_name |  | url | |
+| File | display_name |  | /files/?preview=<_id_> | |
 | Folder | name | | folders_url | |
-| Module | name | | courses/<_course_>/modules#context_module_<_id_> | items |
+| Module | name | | /modules#context_module_<_id_> | items |
 | ModuleItem | title |  | html_url | |
 | Page | title | body | html_url | |
 | Quizzes | title | description | html_url | questions |
-| QuizQuestion | question_name | question_text | courses/<_course_>/quizzes/<_quiz_>/edit#question_<_id_> | |
+| QuizQuestion | question_name | question_text | /quizzes/<_quiz_>/edit#question_<_id_> | |
 
 [Files]: #files-extends-items "Files"
 [Folders]: #folders-extends-items "Folders"
