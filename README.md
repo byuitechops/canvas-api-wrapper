@@ -187,37 +187,37 @@ The abstract class for the items to inherit from
 - _async_ **`update`** ( callback<sub>_opt_</sub> )
 	- Only updates if properties have been changed on the Item since it was last gotten
 - _async_ **`delete`** ( callback<sub>_opt_</sub> )
-	- Use the delete property on **Items** instead, to delete the local copy
+	- Use the delete property on [Items](#items-extends-array) instead, to delete the local copy
 - _async_ **`create`** ( callback<sub>_opt_</sub> )
 	- creates the item with all of it's current properties
 
-### Assignments _extends_ **Items**
+### Assignments _extends_ [Items](#items-extends-array)
 ### Assignment _extends_ **Item**
 
-### Discussions _extends_ **Items**
+### Discussions _extends_ [Items](#items-extends-array)
 ### Discussion _extends_ **Item**
 
-### Files _extends_ **Items**
+### Files _extends_ [Items](#items-extends-array)
 - Doesn't have a create method
 ### File _extends_ **Item**
 - Doesn't have a create method
 
-### Folders _extends_ **Items**
+### Folders _extends_ [Items](#items-extends-array)
 ### Folders _extends_ **Item**
 
-### Modules _extends_ **Items**
+### Modules _extends_ [Items](#items-extends-array)
 ### Module _extends_ **Item**
 - **`items`** <**ModuleItems**>
-### ModuleItems _extends_ **Items**
+### ModuleItems _extends_ [Items](#items-extends-array)
 ### ModuleItem _extends_ **Item**
 
-### Pages _extends_ **Items**
+### Pages _extends_ [Items](#items-extends-array)
 ### Page _extends_ **Item**
 
-### Quizzes _extends_ **Items**
+### Quizzes _extends_ [Items](#items-extends-array)
 ### Quiz _extends_ **Item**
 - **`questions`** <**QuizQuestions**>
-### QuizQuestions _extends_ **Items**
+### QuizQuestions _extends_ [Items](#items-extends-array)
 ### QuizQuestion _extends_ **Item**
 
 
