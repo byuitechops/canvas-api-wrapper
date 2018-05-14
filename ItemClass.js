@@ -107,6 +107,7 @@ module.exports = class Item {
     }
     this[this._title] = val 
   }
+  /** @return {string} - item's Url */
   getUrl(){ 
     if(!this._url){
       throw new TypeError("Classes extending the Items class did not define a _url property")
@@ -119,20 +120,25 @@ module.exports = class Item {
   }
   /** @return {string} - item's id */
   getId(){ return this._id }
-  /** @return {string} - item's Url */
   /**
    * Checks to see if this item's properties have changed since the last setData
    * @private
    * @return {false || Array[thisChanged,childrenChanged]}
    */
-  hasChanged(){
-    var thisChanged = this._original != undefined && JSON.stringify(this) != this._original
-    var childrenChanged = this._subs.some(key => this[key].hasChanged())
-    if(thisChanged || childrenChanged){
-      return [thisChanged,childrenChanged]
-    } else {
-      return null
-    }
+  /**
+   * @private
+   * @return {object} - this object with out it's children
+   */
+  toJSON() {
+    var temp = Object.assign({},this)
+    this._subs.forEach(key => delete temp[key])
+    return temp
+  }
+  getChanged(){
+    return [
+      this._original != undefined && JSON.stringify(this) != this._original,
+      this._subs.some(key => this[key].hasChanged()),
+    ]
   }
   /**
    * Retrieves all of the sub items, and their sub items
@@ -150,7 +156,7 @@ module.exports = class Item {
    * @return {Item} this
    */
   async get(includeSub=false,callback=undefined){
-    if(typeof inclueSub == 'function'){
+    if(typeof includeSub == 'function'){
       callback = includeSub
       includeSub = false
     }
@@ -175,20 +181,18 @@ module.exports = class Item {
   async update(callback=undefined){
     if(callback){return util.callbackify(this.update.bind(this))(...arguments)}
     // If nothing has changed then don't bother
-    var changes = this.hasChanged()
-    if(!changes) return;
-    var [thisChanged,childrenChanged] = changes
+    var [thisChanged,childrenChanged] = this.getChanged()
     if(thisChanged){
       var data = await canvas(this.getPath(),{
         method: 'PUT',
         body: this.getPostbody()
       })
+      this.setData(data)
     }
     if(childrenChanged){
       // Update all of the children as well
       await Promise.all(this._subs.map(key => this[key].updateAll()))
     }
-    this.setData(data)
   }
   /**
   * Deletes the item from canvas

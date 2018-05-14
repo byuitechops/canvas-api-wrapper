@@ -125,21 +125,18 @@ function parseLink(str){
 }
 
 // Is responsible for our making our crazy function signiture
-function canvas(){
+function canvas(path,options,callback){
+  console.log(this.method || (options && options.method) || 'GET',path)
   if(!settings.apiToken){
     throw new Error('Canvas API Token was not set')
   }
-  let args = [...arguments], blame = stack()
-  if(typeof args[args.length-1] == 'function'){
-    // expecting a callback
-    if(args.length == 2){
-      // they didn't give us any options
-      args[2] = args[1]
-      args[1] = {}
-    }
-    return util.callbackify(call).call(this,blame,...args)
+  if(typeof options == 'function'){
+    callback = options
+    options = {}
   }
-  return call.call(this,blame,...args)
+  if(callback){return util.callbackify(canvas.bind(this))(...arguments)}
+
+  return call.call(this,stack(),path,options)
 }
 
 Object.defineProperties(canvas,{

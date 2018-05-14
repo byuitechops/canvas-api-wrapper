@@ -52,7 +52,7 @@ module.exports = class Items extends Array{
    * Any of the childern have changed
    */
   hasChanged(){
-    return this.some(item => item.hasChanged())
+    return this.some(item => (n => n[0]||n[1])(item.getChanged()))
   }
   /**
    * Updates all of the items
@@ -77,6 +77,7 @@ module.exports = class Items extends Array{
     var item = this._constructItem()
     item.setData(data)
     await item.create()
+    item._id = item[this.childClass.idProp]
     this.push(item)
     return item
   }
@@ -133,10 +134,12 @@ module.exports = class Items extends Array{
     if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
 
     var foundIndex = this.findIndex(n => n.getId() == id)
-    if(foundIndex == -1) throw new Error("Can't delete an item that does not exist");
-
-    await this[foundIndex].delete()
-
-    this.splice(foundIndex,1)
+    if(foundIndex != -1){
+      await this[foundIndex].delete()
+      this.splice(foundIndex,1)
+    } else {
+      var temp = this._constructItem(id)
+      temp.delete()
+    }
   }
 }
