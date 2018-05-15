@@ -1,5 +1,30 @@
-# canvas-api-wrapper
-Simplifies the already simple canvas api calls, and handles pagenation and throttling
+## Super simple to use
+This module wraps the [Canvas Api](https://canvas.instructure.com/doc/api/all_resources.html) handling pagination and throttling. Giving easy access to the main CRUD operations, and making the other more specific calls easier as well.
+``` js
+// Example: Publish all Modules
+const canvas = require('canvas-api-wrapper')
+canvas.domain = 'example'
+
+const course = canvas.getCourse(19284)
+
+await course.modules.getAll()
+
+course.modules.forEach(module => {
+	module.published = true
+})
+
+await course.update()
+```
+
+## Table of contents
+- [Get Started](#get-started)
+- [Settings](#settings)
+- [Standard Calls](#standard-calls)
+- [Wrapped Calls](#wrapped-calls)
+	- [Course](#course-extends-item)
+	- [Items](#items-extends-array)
+	- [Item](#item)
+- [Item Gets and Sets](#item-gets-and-sets)
 
 ## Get Started
 #### Install
@@ -26,31 +51,89 @@ set CANVAS_API_TOKEN="<TOKEN>"
 export CANVAS_API_TOKEN="<TOKEN>"
 ```
 
-## Helpers
-The CRUD operations for Assignments, Quizzes, Modules, Discussions, Pages, Files and Folders are wrapped for convenience
-``` js
-// Example: Publish all Modules
+## Settings
+This library handles all of the throttling, so that you won't go over your
+rate limit. But you may want to tweek the settings to speed it up or slow it 
+down
+``` javascript
+// the subdomain under canvas 
+//  https://<domain>.instructure.com
+canvas.domain = 'byui';
 
-// a synchronous function to get an instance of the Course class
-const course = canvas.getCourse(19284)
+// Scale of 0 to 700, you get filled up to 700 and if you go under
+// 0 then canvas will start sending you 403 (unauthorized) or tell 
+// you that the servers are melting. So when it goes past this number
+// I will halt the requests until it gets filled back to this level
+// Give it a pretty large buffer, it tends to go quite a ways past the
+// buffer before I catch it.
+canvas.rateLimitBuffer = 300;
 
-// Retrieves all of the modules in the course
-await course.modules.getAll()
+// How many to send synchronously at the same time, the higher this
+// number, the more it will go over your rateLimitBuffer
+canvas.callLimit = 30;
 
-// course.modules inherits from the Array class, so array operations work
-course.modules.forEach(module => {
+// How much the calls are staggered (milliseconds) especially at the
+// beginning so that it doesn't send the callLimit all at the same time
+canvas.minSendInterval = 10;
 
-	module.published = true
-
-})
-
-// This will only send the POST requests on it and/or its children 
-// that have been changed
-await course.update()
+// After it goes under the rateLimitBuffer, how often to check what the
+// buffer is at now, this should be pretty high because there will be
+// a lot of threads checking at the same time.
+canvas.checkStatusInterval = 2000;
 ```
 
+## Standard Calls
+Use awaits or the optional callback
+```js
+var modules = await canvas('/api/v1/courses/10698/modules')
+
+canvas('/api/v1/courses/10698/modules', function(err,modules){
+	if(err) {
+		console.error(err);
+		return 
+	}
+	console.log(modules)
+})
+```
+Include post body under the `body` property in options
+```js
+await canvas.post('/api/v1/courses/10698/modules',{
+	body:{
+		module:{
+			name:"New Module"
+		}
+	}
+})
+```
+Also useful is the `query` property which will build the querystring from an object
+``` js
+var queriedModules = await canvas('/api/v1/courses/10698/modules',{
+	query:{
+		search_term:'New Module'
+	}
+})
+```
+See all documentation for the options parameter in the [got library](https://www.npmjs.com/package/got#user-content-api)
+
+### Signatures
+``` js
+canvas(url[,options][,callback]) // uses a GET request
+
+canvas.get(url[,options][,callback])
+
+canvas.post(url[,options][,callback])
+
+canvas.put(url[,options][,callback])
+
+canvas.delete(url[,options][,callback])
+
+canvas.getCourse(id)
+```
+
+## Wrapped Calls
+The CRUD operations for files, folders, assignments, discussions, modules, pages, and quizzes are wrapped for convenience. The can be accessed through the [Course Class](#course-extends-item) which is created through `canvas.getCourse(id)`
+
 ### Course _extends_ [Item](#item)
-The main Class which is returned from `canvas.getCourse()`
  - **`files`** <[Files]>
  - **`folders`** <[Folders]>
  - **`assignments`** <[Assignments]>
@@ -165,104 +248,11 @@ The abstract class for the items to inherit from
 	- Retrieves the item from canvas
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
 - _async_ **`update`** ( callback<sub>_opt_</sub> )
-	- Only updates if properties have been changed on the Item since it was last gotten
+	- Only updates if properties have been changed on the Item since it was last gotten, also updates all of it's sub children who have been changed
 - _async_ **`delete`** ( callback<sub>_opt_</sub> )
 	- Use the delete property on [Items](#items-extends-array) instead, to delete the local copy
 - _async_ **`create`** ( callback<sub>_opt_</sub> )
-	- creates the item with all of it's current properties
-
-#### Use Await
-``` javascript
-let self = await canvas('/api/v1/users/self')
-console.log(self.name)
-```
-#### Use Promises
-``` javascript
-canvas('/api/v1/users/self')
-	.then(self => {
-		console.log(self.name)
-	})
-```
-#### Use Callbacks
-``` javascript
-canvas('/api/v1/users/self', function(err,self){
-	if(err) return console.error(err);
-	console.log(self.name)
-})
-```
-
-
-## Signatures
-The options parameter is the same as [got options](https://www.npmjs.com/package/got#user-content-api)
-``` javascript
-canvas(url[,options][,callback]) // uses a GET request
-
-canvas.get(url[,options][,callback])
-
-canvas.post(url[,options][,callback])
-
-canvas.put(url[,options][,callback])
-
-canvas.patch(url[,options][,callback])
-
-canvas.head(url[,options][,callback])
-
-canvas.delete(url[,options][,callback])
-```
-
-### Default Settings
-``` javascript
-// the subdomain under canvas 
-//  https://<domain>.instructure.com
-canvas.domain = 'byui';
-
-// Scale of 0 to 700, you get filled up to 700 and if you go under
-// 0 then canvas will start sending you 403 (unauthorized) or tell 
-// you that the servers are melting. So when it goes past this number
-// I will halt the requests until it gets filled back to this level
-// Give it a pretty large buffer, it tends to go quite a ways past the
-// buffer before I catch it.
-canvas.rateLimitBuffer = 300;
-
-// How many to send synchronously at the same time, the higher this
-// number, the more it will go over your rateLimitBuffer
-canvas.callLimit = 30;
-
-// How much the calls are staggered (milliseconds) especially at the
-// beginning so that it doesn't send the callLimit all at the same time
-canvas.minSendInterval = 10;
-
-// After it goes under the rateLimitBuffer, how often to check what the
-// buffer is at now, this should be pretty high because there will be
-// a lot of threads checking at the same time.
-canvas.checkStatusInterval = 2000;
-```
-
-### Examples
-``` js
-(async () => {
-	var modules = await canvas('/api/v1/courses/10698/modules')
-	console.log(`There are ${modules.length} modules`)
-
-	await canvas.post('/api/v1/courses/10698/modules',{
-		body:{
-			module:{
-				name:"New Module"
-			}
-		}
-	})
-
-	// This query option also comes from got
-	var queriedModules = await canvas('/api/v1/courses/10698/modules',{
-		query:{
-			search_term:'New Module'
-		}
-	})
-	console.log('Found my new module',queriedModules)
-})()
-```
-
-
+	- creates the item with all of it's current properties, use the create property on [Items](#items-extends-array) instead.
 
 ### Assignments _extends_ [Items](#items-extends-array)
 ### Assignment _extends_ [Item](#item)
