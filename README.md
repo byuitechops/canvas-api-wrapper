@@ -1,5 +1,30 @@
-# canvas-api-wrapper
-Simplifies the already simple canvas api calls, and handles pagenation and throttling
+## Super simple to use
+This module wraps the [Canvas Api](https://canvas.instructure.com/doc/api/all_resources.html) handling pagination and throttling. Giving easy access to the main CRUD operations, and making the other more specific calls easier as well.
+``` js
+// Example: Publish all Modules
+const canvas = require('canvas-api-wrapper')
+canvas.domain = 'example'
+
+const course = canvas.getCourse(19284)
+
+await course.modules.getAll()
+
+course.modules.forEach(module => {
+	module.published = true
+})
+
+await course.update()
+```
+
+## Table of contents
+- [Get Started](#get-started)
+- [Settings](#settings)
+- [Standard Calls](#standard-calls)
+- [Wrapped Calls](#wrapped-calls)
+	- [Course](#course-extends-item)
+	- [Items](#items-extends-array)
+	- [Item](#item)
+- [Item Gets and Sets](#item-gets-and-sets)
 
 ## Get Started
 #### Install
@@ -13,7 +38,7 @@ canvas.domain = '<sub domain>' // default: byui
 ```
 Authorization:
 ```js
-canvas.apiToken = '<TOKEN>'
+canvas.apiToken = "<TOKEN>"
 ```
 ``` bash
 # Powershell
@@ -26,57 +51,23 @@ set CANVAS_API_TOKEN="<TOKEN>"
 export CANVAS_API_TOKEN="<TOKEN>"
 ```
 
-#### Use Await
-``` javascript
-let self = await canvas('/api/v1/users/self')
-console.log(self.name)
-```
-#### Use Promises
-``` javascript
-canvas('/api/v1/users/self')
-	.then(self => {
-		console.log(self.name)
-	})
-```
-#### Use Callbacks
-``` javascript
-canvas('/api/v1/users/self', function(err,self){
-	if(err) return console.error(err);
-	console.log(self.name)
-})
-```
-
-
-## Signatures
-The options parameter is the same as [got options](https://www.npmjs.com/package/got#user-content-api)
-``` javascript
-canvas(url[,options][,callback]) // uses a GET request
-
-canvas.get(url[,options][,callback])
-
-canvas.post(url[,options][,callback])
-
-canvas.put(url[,options][,callback])
-
-canvas.patch(url[,options][,callback])
-
-canvas.head(url[,options][,callback])
-
-canvas.delete(url[,options][,callback])
-```
-
-### Default Settings
-``` javascript
+## Settings
+This library handles all of the throttling, so that you won't go over your
+rate limit. But you may want to tweek the settings to speed it up or slow it 
+down
+```js
 // the subdomain under canvas 
 //  https://<domain>.instructure.com
 canvas.domain = 'byui';
 
-// Scale of 0 to 700, you get filled up to 700 and if you go under
-// 0 then canvas will start sending you 403 (unauthorized) or tell 
-// you that the servers are melting. So when it goes past this number
-// I will halt the requests until it gets filled back to this level
-// Give it a pretty large buffer, it tends to go quite a ways past the
-// buffer before I catch it.
+// Canvas uses a rate-limit point system to handle spamming. Canvas
+// fills your account to 700 'points' and subtracts from your 'points'
+// every time you make a call. If you go below 0 then canvas will start
+// sending you 403 (unauthorized) statuses or tell you that the servers
+// are melting. So when your account goes under the 'rateLimitBuffer'
+// this module will halt the requests until it gets filled back to 
+// the 'rateLimitBuffer'. Give it a pretty large buffer, it tends to 
+// go quite a ways past the buffer before I catch it.
 canvas.rateLimitBuffer = 300;
 
 // How many to send synchronously at the same time, the higher this
@@ -87,138 +78,209 @@ canvas.callLimit = 30;
 // beginning so that it doesn't send the callLimit all at the same time
 canvas.minSendInterval = 10;
 
-// After it goes under the rateLimitBuffer, how often to check what the
-// buffer is at now, this should be pretty high because there will be
-// a lot of threads checking at the same time.
+// After it goes under the rateLimitBuffer, how often (in milliseconds) 
+// to check what the buffer is at now, this should be pretty high because
+// there will be a lot of threads checking at the same time.
 canvas.checkStatusInterval = 2000;
-}
 ```
 
-### Examples
+## Standard Calls
+Use awaits or the optional callback
+```js
+var modules = await canvas('/api/v1/courses/10698/modules')
+
+canvas('/api/v1/courses/10698/modules', function(err,modules){
+	if(err) {
+		console.error(err);
+		return 
+	}
+	console.log(modules)
+})
+```
+Include post body under the `body` property in options
+```js
+await canvas.post('/api/v1/courses/10698/modules',{
+	body:{
+		module:{
+			name:"New Module"
+		}
+	}
+})
+```
+Also useful is the `query` property which will build the querystring from an object
 ``` js
-(async () => {
-	var modules = await canvas('/api/v1/courses/10698/modules')
-	console.log(`There are ${modules.length} modules`)
+var queriedModules = await canvas('/api/v1/courses/10698/modules',{
+	query:{
+		search_term:'New Module'
+	}
+})
+```
+See all documentation for the options parameter in the [got library](https://www.npmjs.com/package/got#user-content-api)
 
-	await canvas.post('/api/v1/courses/10698/modules',{
-		body:{
-			module:{
-				name:"New Module"
-			}
-		}
-	})
+### Signatures
+``` js
+canvas(url[,options][,callback]) // uses a GET request
 
-	// This query option also comes from got
-	var queriedModules = await canvas('/api/v1/courses/10698/modules',{
-		query:{
-			search_term:'New Module'
-		}
-	})
-	console.log('Found my new module',queriedModules)
-})()
+canvas.get(url[,options][,callback])
+
+canvas.post(url[,options][,callback])
+
+canvas.put(url[,options][,callback])
+
+canvas.delete(url[,options][,callback])
+
+canvas.getCourse(id)
 ```
 
-## Helper methods
-Some of the main api calls are wrapped for your convenience 
-``` javascript
-// Example: publish all of the modules
+## Wrapped Calls
+The CRUD operations for files, folders, assignments, discussions, modules, pages, and quizzes are wrapped for convenience. The can be accessed through the [Course Class](#course-extends-item) which is created through `canvas.getCourse(id)`
 
-const course = canvas.getCourse(19284)
+### Course _extends_ [Item](#item)
+ - `files` <[Files]>
+ - `folders` <[Folders]>
+ - `assignments` <[Assignments]>
+ - `discussions` <[Discussions]>
+ - `modules` <[Modules]>
+ - `pages` <[Pages]>
+ - `quizzes` <[Quizzes]>
+ 
+``` js
+var course = canvas.getCourse(17829)
 
-const modules = await course.modules.getAll()
+// this will get the course object and attach the properties to the course
+await course.get()
+// allowing you to do 
+course.getTitle()
+course.is_public = true
+await course.update()
 
-for(var i = 0; i < modules.length; i++){
-	
-	modules[i].published = true
+// turning on the includeSub option, will retrieve every single item and 
+// their sub items in the course. This is not recommended (of course) but 
+// can be helpful in certain situations where you need every item
+await course.get(true)
+course.quizzes[0].questions[0].getTitle()
+course.modules[0].items[0].getTitle()
+course.assignments[0].getTitle()
 
-}
-
-await course.modules.updateAll()
+// Update searches through all of the children for changes, and updates
+// only those with changes. So just doing course.update() will push all
+// changes made anywhere in the course.
+await course.update()
 ```
-### Course
-The main Class which contains all the items
- - **`files`** <**Files**>
- - **`assignments`** <**Assignments**>
- - **`discussions`** <**Discussions**>
- - **`modules`** <**Modules**>
- - **`pages`** <**Pages**>
- - **`quizzes`** <**Quizzes**>
 
 ### Items _extends_ **Array**
 
 The abstract class which all of the lists of items inherit from
 
-- **`course`** <**number**>
-	- the id of the course
+- _async_ `updateAll( [callback] )`
+	- Updates all of the items that have had changes made to them or their children
 
-- _async_ **`updateAll`** ( callback<sub>_opt_</sub> )
-	- Updates all of the items that have had changes made to them
+``` js
+const course = canvas.getCourse(19823)
+await course.assignments.getAll()
+course.assignments.forEach(assignment => {
+	if(assignment.getTitle() == 'potato'){
+		assignment.setTitle('Baked Potato')
+		assignment.published = true
+	}
+})
+// Only updates items named potato, because those were the only ones changed
+await course.assignments.updateAll()
+```
 
-- _async_ **`create`** ( data , callback<sub>_opt_</sub> ) <**Item**>
+- _async_ `create( data, [callback] )` <[Item](#item)>
 	- Creates the item in canvas, with the given data. And adds it to the items property
 	- `data` <**Object**> the properties to add to the created item
 
-- _async_ **`getAll`** ( includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub>  ) <**[Item]**>
+``` js
+const course = canvas.getCourse(19823)
+const page = await course.pages.create({
+	title:'Hello World',
+	body:'<h1>Hello World</h1>',
+	published: true
+})
+console.log(page.getId())
+```
+
+- _async_ `getAll( [includeSub] [,callback]  )` <**[Item]**>
 	- Retrieves all of the children items from canvas
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz` also whether to include the `body` in the `page` object. Defaults to `false`
+``` js
+const course = canvas.getCourse(19823)
+await course.modules.getAll()
+console.log(course.modules)
 
-- _async_ **`getOne`** ( id , includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub> ) <**Item**>
+// using the includeSub option also gets all of the items for each module
+await course.modules.getAll(true)
+console.log(course.modules[0].items)
+```
+
+- _async_ `getOne( id, [includeSub] [,callback] )` <[Item](#item)>
 	- Retrieves a single item from canvas by id
 	- `id` <**number**> the id of the item to grab
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
-
-- _async_ **`delete`** ( id , callback<sub>_opt_</sub> )
+``` js
+const course = canvas.getCourse(19823)
+const folder = course.folders.getOne(114166)
+console.log(folder)
+```
+- _async_ `delete( id , [callback] )`
 	- Removes an item from canvas, and from the local list
 	- `id` <**number**> the id of the item to delete
-
+``` js
+const course = canvas.getCourse(19823)
+await course.quizzes.getAll()
+const questions = await course.quizzes[0].questions.getAll()
+await questions.delete(questions[0].getId())
+```
 ### Item
 
 The abstract class for the items to inherit from
 
-- **`getId`** ( ) <**number**>
-- **`getTitle`** ( ) <**string**>
-- **`setTitle`** ( title<**string**> )
-- **`getHtml`** ( ) <**string**>
-- **`setHtml`** ( html<**string**> )
-- **`getUrl`** ( ) <**string**>
-- _async_ **`get`** ( includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub> ) <**Item**>
+- `getId()` <**number**>
+- `getTitle()` <**string**>
+- `setTitle( title )`
+- `getHtml()` <**string**>
+- `setHtml( html )`
+- `getUrl()` <**string**>
+- _async_ `get( [includeSub] [,callback] )` <[Item](#item)>
 	- Retrieves the item from canvas
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
-- _async_ **`update`** ( callback<sub>_opt_</sub> )
-	- Only updates if properties have been changed on the Item since it was last gotten
-- _async_ **`delete`** ( callback<sub>_opt_</sub> )
-	- Use the delete property on **Items** instead, to delete the local copy
-- _async_ **`create`** ( callback<sub>_opt_</sub> )
-	- creates the item with all of it's current properties
+- _async_ `update( [callback] )`
+	- Only updates if properties have been changed on the Item since it was last gotten, also updates all of it's sub children who have been changed
+- _async_ `delete( [callback] )`
+	- Use the delete property on [Items](#items-extends-array) instead, to delete the local copy
+- _async_ `create( [callback] )`
+	- creates the item with all of it's current properties, use the create property on [Items](#items-extends-array) instead.
 
-### Assignments _extends_ **Items**
-### Assignment _extends_ **Item**
+### Assignments _extends_ [Items](#items-extends-array)
+### Assignment _extends_ [Item](#item)
 
-### Discussions _extends_ **Items**
-### Discussion _extends_ **Item**
+### Discussions _extends_ [Items](#items-extends-array)
+### Discussion _extends_ [Item](#item)
 
-### Files _extends_ **Items**
+### Files _extends_ [Items](#items-extends-array)
 - Doesn't have a create method
-### File _extends_ **Item**
+### File _extends_ [Item](#item)
 - Doesn't have a create method
 
-### Folders _extends_ **Items**
-### Folders _extends_ **Item**
+### Folders _extends_ [Items](#items-extends-array)
+### Folders _extends_ [Item](#item)
 
-### Modules _extends_ **Items**
-### Module _extends_ **Item**
-- **`items`** <**ModuleItems**>
-### ModuleItems _extends_ **Items**
-### ModuleItem _extends_ **Item**
+### Modules _extends_ [Items](#items-extends-array)
+### Module _extends_ [Item](#item)
+- `items` <**ModuleItems**>
+### ModuleItems _extends_ [Items](#items-extends-array)
+### ModuleItem _extends_ [Item](#item)
 
-### Pages _extends_ **Items**
-### Page _extends_ **Item**
+### Pages _extends_ [Items](#items-extends-array)
+### Page _extends_ [Item](#item)
 
-### Quizzes _extends_ **Items**
-### Quiz _extends_ **Item**
-- **`questions`** <**QuizQuestions**>
-### QuizQuestions _extends_ **Items**
-### QuizQuestion _extends_ **Item**
+### Quizzes _extends_ [Items](#items-extends-array)
+### Quiz _extends_ [Item](#item)
+- `questions` <**QuizQuestions**>
+### QuizQuestions _extends_ [Items](#items-extends-array)
+### QuizQuestion _extends_ [Item](#item)
 
 
 ## Item Gets and Sets
@@ -227,11 +289,20 @@ The abstract class for the items to inherit from
 | Course | name | | /courses/<_course_> | files, assignments, discussions, modules, pages, quizzes |
 | Assignment | name | description | html_url | |
 | Discussion | title | message | html_url | |
-| File | display_name |  | url | |
+| File | display_name |  | /files/?preview=<_id_> | |
 | Folder | name | | folders_url | |
-| Module | name | | courses/<_course_>/modules#context_module_<_id_> | items |
+| Module | name | | /modules#context_module_<_id_> | items |
 | ModuleItem | title |  | html_url | |
 | Page | title | body | html_url | |
 | Quizzes | title | description | html_url | questions |
-| QuizQuestion | question_name | question_text | courses/<_course_>/quizzes/<_quiz_>/edit#question_<_id_> | |
+| QuizQuestion | question_name | question_text | /quizzes/<_quiz_>/edit#question_<_id_> | |
 
+[Files]: #files-extends-items "Files"
+[Folders]: #folders-extends-items "Folders"
+[Assignments]: #assignments-extends-items "Assignments"
+[Discussions]: #discussions-extends-items "Discussions"
+[Modules]: #modules-extends-items "Modules"
+[ModuleItems]: #moduleitems-extends-items "ModuleItems"
+[Pages]: #pages-extends-items "Pages"
+[Quizzes]: #quizzes-extends-items "Quizzes"
+[QuizQuestions]: #quizquestions-extends-items "QuizQuestions"

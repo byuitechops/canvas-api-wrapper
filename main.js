@@ -4,12 +4,10 @@ const helpers = require('./helpers')
 /* Add all the helper functions */
 Object.assign(canvas,helpers)
 Object.defineProperties(canvas,{
-  get: { get: () => canvas.bind({method:'get'}) },
-  post: { get: () => canvas.bind({method:'post'}) },
-  put: { get: () => canvas.bind({method:'put'}) },
-  patch: { get: () => canvas.bind({method:'patch'}) },
-  head: { get: () => canvas.bind({method:'head'}) },
-  delete: { get: () => canvas.bind({method:'delete'}) },
+  get: { get: () => canvas.bind({method:'GET'}) },
+  post: { get: () => canvas.bind({method:'POST'}) },
+  put: { get: () => canvas.bind({method:'PUT'}) },
+  delete: { get: () => canvas.bind({method:'DELETE'}) },
 })
 
 module.exports = canvas
