@@ -3,8 +3,8 @@ const canvas = require('./canvas')
 
 /**
  * An abstract class which acts as a container for the different types of items
- * @public   @prop {number} course - the id of the course
- * @public   @prop {array}  items - the list of items it contains (only initalized after get functions)
+ * @public  @prop {number} course - the id of the course
+ * @public  @prop {array}  items - the list of items it contains (only initalized after get functions)
  * @private @abstract @prop {Class}  childClass - the class used for the children
  */
 module.exports = class Items extends Array{
@@ -13,10 +13,14 @@ module.exports = class Items extends Array{
       throw new TypeError("Items expected the id of the course")
     }
     super()
-    this.course = id
-    Object.defineProperty(this,'childClass',{
-      writable:true,
-      enumerable:false
+    Object.defineProperties(this,{
+      childClass:{
+        writable:true,
+      },
+      course:{
+        writable:true,
+        value:id
+      }
     })
   }
   /**

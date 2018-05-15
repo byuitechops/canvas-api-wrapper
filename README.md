@@ -55,17 +55,19 @@ export CANVAS_API_TOKEN="<TOKEN>"
 This library handles all of the throttling, so that you won't go over your
 rate limit. But you may want to tweek the settings to speed it up or slow it 
 down
-``` javascript
+```js
 // the subdomain under canvas 
 //  https://<domain>.instructure.com
 canvas.domain = 'byui';
 
-// Scale of 0 to 700, you get filled up to 700 and if you go under
-// 0 then canvas will start sending you 403 (unauthorized) or tell 
-// you that the servers are melting. So when it goes past this number
-// I will halt the requests until it gets filled back to this level
-// Give it a pretty large buffer, it tends to go quite a ways past the
-// buffer before I catch it.
+// Canvas uses a rate-limit point system to handle spamming. Canvas
+// fills your account to 700 'points' and subtracts from your 'points'
+// every time you make a call. If you go below 0 then canvas will start
+// sending you 403 (unauthorized) statuses or tell you that the servers
+// are melting. So when your account goes under the 'rateLimitBuffer'
+// this module will halt the requests until it gets filled back to 
+// the 'rateLimitBuffer'. Give it a pretty large buffer, it tends to 
+// go quite a ways past the buffer before I catch it.
 canvas.rateLimitBuffer = 300;
 
 // How many to send synchronously at the same time, the higher this
@@ -76,9 +78,9 @@ canvas.callLimit = 30;
 // beginning so that it doesn't send the callLimit all at the same time
 canvas.minSendInterval = 10;
 
-// After it goes under the rateLimitBuffer, how often to check what the
-// buffer is at now, this should be pretty high because there will be
-// a lot of threads checking at the same time.
+// After it goes under the rateLimitBuffer, how often (in milliseconds) 
+// to check what the buffer is at now, this should be pretty high because
+// there will be a lot of threads checking at the same time.
 canvas.checkStatusInterval = 2000;
 ```
 
@@ -134,13 +136,13 @@ canvas.getCourse(id)
 The CRUD operations for files, folders, assignments, discussions, modules, pages, and quizzes are wrapped for convenience. The can be accessed through the [Course Class](#course-extends-item) which is created through `canvas.getCourse(id)`
 
 ### Course _extends_ [Item](#item)
- - **`files`** <[Files]>
- - **`folders`** <[Folders]>
- - **`assignments`** <[Assignments]>
- - **`discussions`** <[Discussions]>
- - **`modules`** <[Modules]>
- - **`pages`** <[Pages]>
- - **`quizzes`** <[Quizzes]>
+ - `files` <[Files]>
+ - `folders` <[Folders]>
+ - `assignments` <[Assignments]>
+ - `discussions` <[Discussions]>
+ - `modules` <[Modules]>
+ - `pages` <[Pages]>
+ - `quizzes` <[Quizzes]>
  
 ``` js
 var course = canvas.getCourse(17829)
@@ -170,10 +172,7 @@ await course.update()
 
 The abstract class which all of the lists of items inherit from
 
-- **`course`** <**number**>
-	- the id of the course
-
-- _async_ **`updateAll`** ( callback<sub>_opt_</sub> )
+- _async_ `updateAll( [callback] )`
 	- Updates all of the items that have had changes made to them or their children
 
 ``` js
@@ -189,7 +188,7 @@ course.assignments.forEach(assignment => {
 await course.assignments.updateAll()
 ```
 
-- _async_ **`create`** ( data , callback<sub>_opt_</sub> ) <[Item](#item)>
+- _async_ `create( data, [callback] )` <[Item](#item)>
 	- Creates the item in canvas, with the given data. And adds it to the items property
 	- `data` <**Object**> the properties to add to the created item
 
@@ -203,7 +202,7 @@ const page = await course.pages.create({
 console.log(page.getId())
 ```
 
-- _async_ **`getAll`** ( includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub>  ) <**[Item]**>
+- _async_ `getAll( [includeSub] [,callback]  )` <**[Item]**>
 	- Retrieves all of the children items from canvas
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz` also whether to include the `body` in the `page` object. Defaults to `false`
 ``` js
@@ -216,7 +215,7 @@ await course.modules.getAll(true)
 console.log(course.modules[0].items)
 ```
 
-- _async_ **`getOne`** ( id , includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub> ) <[Item](#item)>
+- _async_ `getOne( id, [includeSub] [,callback] )` <[Item](#item)>
 	- Retrieves a single item from canvas by id
 	- `id` <**number**> the id of the item to grab
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
@@ -225,7 +224,7 @@ const course = canvas.getCourse(19823)
 const folder = course.folders.getOne(114166)
 console.log(folder)
 ```
-- _async_ **`delete`** ( id , callback<sub>_opt_</sub> )
+- _async_ `delete( id , [callback] )`
 	- Removes an item from canvas, and from the local list
 	- `id` <**number**> the id of the item to delete
 ``` js
@@ -238,20 +237,20 @@ await questions.delete(questions[0].getId())
 
 The abstract class for the items to inherit from
 
-- **`getId`** ( ) <**number**>
-- **`getTitle`** ( ) <**string**>
-- **`setTitle`** ( title<**string**> )
-- **`getHtml`** ( ) <**string**>
-- **`setHtml`** ( html<**string**> )
-- **`getUrl`** ( ) <**string**>
-- _async_ **`get`** ( includeSub<sub>_opt_</sub> , callback<sub>_opt_</sub> ) <[Item](#item)>
+- `getId()` <**number**>
+- `getTitle()` <**string**>
+- `setTitle( title )`
+- `getHtml()` <**string**>
+- `setHtml( html )`
+- `getUrl()` <**string**>
+- _async_ `get( [includeSub] [,callback] )` <[Item](#item)>
 	- Retrieves the item from canvas
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
-- _async_ **`update`** ( callback<sub>_opt_</sub> )
+- _async_ `update( [callback] )`
 	- Only updates if properties have been changed on the Item since it was last gotten, also updates all of it's sub children who have been changed
-- _async_ **`delete`** ( callback<sub>_opt_</sub> )
+- _async_ `delete( [callback] )`
 	- Use the delete property on [Items](#items-extends-array) instead, to delete the local copy
-- _async_ **`create`** ( callback<sub>_opt_</sub> )
+- _async_ `create( [callback] )`
 	- creates the item with all of it's current properties, use the create property on [Items](#items-extends-array) instead.
 
 ### Assignments _extends_ [Items](#items-extends-array)
@@ -270,7 +269,7 @@ The abstract class for the items to inherit from
 
 ### Modules _extends_ [Items](#items-extends-array)
 ### Module _extends_ [Item](#item)
-- **`items`** <**ModuleItems**>
+- `items` <**ModuleItems**>
 ### ModuleItems _extends_ [Items](#items-extends-array)
 ### ModuleItem _extends_ [Item](#item)
 
@@ -279,7 +278,7 @@ The abstract class for the items to inherit from
 
 ### Quizzes _extends_ [Items](#items-extends-array)
 ### Quiz _extends_ [Item](#item)
-- **`questions`** <**QuizQuestions**>
+- `questions` <**QuizQuestions**>
 ### QuizQuestions _extends_ [Items](#items-extends-array)
 ### QuizQuestion _extends_ [Item](#item)
 
