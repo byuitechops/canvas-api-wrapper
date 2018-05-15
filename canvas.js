@@ -16,7 +16,7 @@ let queue = promiseLimit(30),
   nextSendTime = Date.now(),
   lastOverBuffer = 0,
   rateLimitRemaining = 700,
-  baseUrl = `https://${settings.domain}.instructure.com`
+  baseUrl = `http://${settings.domain}.instructure.com`
 
 // The center of the universe
 async function call(blame,path, options = {}) {
@@ -126,7 +126,7 @@ function parseLink(str){
 
 // Is responsible for our making our crazy function signiture
 function canvas(path,options,callback){
-  console.log(this.method || (options && options.method) || 'GET',path)
+  // console.log(this.method || (options && options.method) || 'GET',path)
   if(!settings.apiToken){
     throw new Error('Canvas API Token was not set')
   }
