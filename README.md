@@ -5,14 +5,18 @@ This module wraps the [Canvas Api](https://canvas.instructure.com/doc/api/all_re
 const canvas = require('canvas-api-wrapper')
 canvas.domain = 'example'
 
+// Gets the course shell (doesn't send any requests)
 const course = canvas.getCourse(19284)
 
+// Gets the data for all modules for this course
 await course.modules.getAll()
 
+// modules inherits from Array, so Array methods work
 course.modules.forEach(module => {
 	module.published = true
 })
 
+// Updates everything in the course that has been changed
 await course.update()
 ```
 
@@ -61,13 +65,13 @@ down
 canvas.domain = 'byui';
 
 // Canvas uses a rate-limit point system to handle spamming. Canvas
-// fills your account to 700 'points' and subtracts from your 'points'
-// every time you make a call. If you go below 0 then canvas will start
-// sending you 403 (unauthorized) statuses or tell you that the servers
-// are melting. So when your account goes under the 'rateLimitBuffer'
+// currently fills your account to 700 'points' though subject to change
+// then subtracts from your 'points' every time you make a call. If 
+// you go below 0 then canvas will start sending you 403 (unauthorized) 
+// statuses. So when your account goes under the 'rateLimitBuffer'
 // this module will halt the requests until it gets filled back to 
 // the 'rateLimitBuffer'. Give it a pretty large buffer, it tends to 
-// go quite a ways past the buffer before I catch it.
+// go quite a ways past the buffer before this module catches it.
 canvas.rateLimitBuffer = 300;
 
 // How many to send synchronously at the same time, the higher this
@@ -238,6 +242,7 @@ The abstract class for the items to inherit from
 - `getHtml()` <**string**>
 - `setHtml( html )`
 - `getUrl()` <**string**>
+- `getSubs()` <**[Items]**> - Array of children [Items](#items-extends-array)
 - _async_ `get( [includeSub] [,callback] )` <[Item](#item)>
 	- Retrieves the item from canvas
 	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
@@ -279,18 +284,18 @@ The abstract class for the items to inherit from
 
 
 ## Item Gets and Sets
-| Type | Title | Html | Url | Sub Items Lists |
-|------------|-------|------|-----|------|
-| Course | name | | /courses/<_course_> | files, assignments, discussions, modules, pages, quizzes |
-| Assignment | name | description | html_url | |
-| Discussion | title | message | html_url | |
-| File | display_name |  | /files/?preview=<_id_> | |
-| Folder | name | | folders_url | |
-| Module | name | | /modules#context_module_<_id_> | items |
-| ModuleItem | title |  | html_url | |
-| Page | title | body | html_url | |
-| Quizzes | title | description | html_url | questions |
-| QuizQuestion | question_name | question_text | /quizzes/<_quiz_>/edit#question_<_id_> | |
+| Type | getId | getTitle/setTitle | getHtml/setHtml | getUrl | getSubs |
+|------------|-------|------|-----|------|---|
+| Course | id | name | | /courses/<_course_> | [ files, folders, assignments, discussions, modules, pages, quizzes ] |
+| Assignment | id | name | description | html_url | |
+| Discussion | id | title | message | html_url | |
+| File | id | display_name |  | /files/?preview=<_id_> | |
+| Folder | id | name | | folders_url | |
+| Module | id | name | | /modules#context_module_<_id_> | [ items ] |
+| ModuleItem | id | title |  | html_url | |
+| Page | page_id | title | body | html_url | |
+| Quizzes | id | title | description | html_url | [ questions ] |
+| QuizQuestion | id | question_name | question_text | /quizzes/<_quiz_>/edit#question_<_id_> | |
 
 [Files]: #files-extends-items "Files"
 [Folders]: #folders-extends-items "Folders"

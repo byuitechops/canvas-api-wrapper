@@ -75,42 +75,42 @@ module.exports = class Item {
    */
   getPath(includeId=true){
     if(!this._path){
-      throw new TypeError("Classes extending the Item class needs _path defined")
+      throw new TypeError("Class extending the Item class doesn't have path defined")
     }
     return `/api/v1/courses/${this._course}/${this._path}/${includeId ? this._id : ''}`
   }
   /** @return {string} - item's html */
   getHtml(){
     if(!this._html){
-      throw new TypeError("Class extending the Item class did not define a _html property")
+      throw new TypeError("Class extending the Item class doesn't have a html property defined")
     }
     return this[this._html] || ""
   }
   /** @param {string} - item's html */
   setHtml(val){ 
     if(!this._html){
-      throw new TypeError("Class extending the Item class did not define a _html property")
+      throw new TypeError("Class extending the Item class doesn't have a html property defined")
     }
     this[this._html] = val
   }
   /** @return {string} - item's title */
   getTitle(){ 
     if(!this._title){
-      throw new TypeError("Class extending the Item class did not define a _title property")
+      throw new TypeError("Class extending the Item class doesn't have a title property defined")
     }
     return this[this._title] || ""
   }
   /** @param {string} - item's title */
   setTitle(val){ 
     if(!this._title){
-      throw new TypeError("Class extending the Item class did not define a _title property")
+      throw new TypeError("Class extending the Item class doesn't have a title property defined")
     }
     this[this._title] = val 
   }
   /** @return {string} - item's Url */
   getUrl(){ 
     if(!this._url){
-      throw new TypeError("Classes extending the Items class did not define a _url property")
+      throw new TypeError("Class extending the Item class doesn't have a url property defined")
     }
     if(this._url.includes('http')){
       return this._url
@@ -120,11 +120,10 @@ module.exports = class Item {
   }
   /** @return {string} - item's id */
   getId(){ return this._id }
-  /**
-   * Checks to see if this item's properties have changed since the last setData
-   * @private
-   * @return {false || Array[thisChanged,childrenChanged]}
-   */
+  /** @return {[Items]} - array of subs */
+  getSubs(){
+    return this._subs.map(key => this[key])
+  }
   /**
    * @private
    * @return {object} - this object with out it's children
@@ -134,10 +133,15 @@ module.exports = class Item {
     this._subs.forEach(key => delete temp[key])
     return temp
   }
+  /**
+   * Checks to see if this item's properties have changed since the last setData
+   * @private
+   * @return {false || Array[thisChanged,childrenChanged]}
+   */
   getChanged(){
     return [
       this._original != undefined && JSON.stringify(this) != this._original,
-      this._subs.some(key => this[key].hasChanged()),
+      this.getSubs().some(sub => sub.hasChanged()),
     ]
   }
   /**
@@ -145,7 +149,7 @@ module.exports = class Item {
    * @private
    */
   async getSub(){
-    await Promise.all(this._subs.map(key => this[key].getAll(true)))
+    await Promise.all(this.getSubs().map(sub => sub.getAll(true)))
     // reset the has changed
     this._original = JSON.stringify(this)
   }
@@ -188,7 +192,7 @@ module.exports = class Item {
     }
     if(childrenChanged){
       // Update all of the children as well
-      await Promise.all(this._subs.map(key => this[key].updateAll()))
+      await Promise.all(this.getSubs().map(sub => sub.updateAll()))
     }
   }
   /**
