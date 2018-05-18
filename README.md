@@ -101,7 +101,7 @@ canvas('/api/v1/courses/10698/modules', function(err,modules){
 	console.log(modules)
 })
 ```
-If a post, put, or delete request the second argument is the body
+If a post, put, or delete request the second argument is the request body
 ```js
 await canvas.post('/api/v1/courses/10698/modules',{
 	module:{
@@ -109,7 +109,7 @@ await canvas.post('/api/v1/courses/10698/modules',{
 	}
 })
 ```
-
+If a get request, the second argument is the query object
 ``` js
 var queriedModules = await canvas('/api/v1/courses/10698/modules',{
 		search_term:'New Module'
