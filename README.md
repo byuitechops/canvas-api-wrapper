@@ -161,7 +161,7 @@ await course.update()
 // can be helpful in certain situations where you need every item
 await course.get(true)
 course.quizzes[0].questions[0].getTitle()
-course.modules[0].items[0].getTitle()
+course.modules[0].moduleItems[0].getTitle()
 course.assignments[0].getTitle()
 
 // Update searches through all of the children for changes, and updates
@@ -214,7 +214,7 @@ console.log(course.modules)
 
 // using the includeSub option also gets all of the items for each module
 await course.modules.getAll(true)
-console.log(course.modules[0].items)
+console.log(course.modules[0].moduleItems)
 ```
 
 - _async_ `getOne( id, [includeSub] [,callback] )` <[Item](#item)>
@@ -272,7 +272,7 @@ The abstract class for the items to inherit from
 
 ### Modules _extends_ [Items](#items-extends-array)
 ### Module _extends_ [Item](#item)
-- `items` <**ModuleItems**>
+- `moduleItems` <**ModuleItems**>
 ### ModuleItems _extends_ [Items](#items-extends-array)
 ### ModuleItem _extends_ [Item](#item)
 
@@ -294,7 +294,7 @@ The abstract class for the items to inherit from
 | Discussion | id | title | message | html_url | |
 | File | id | display_name |  | /files/?preview=<_id_> | |
 | Folder | id | name | | folders_url | |
-| Module | id | name | | /modules#context_module_<_id_> | [ items ] |
+| Module | id | name | | /modules#context_module_<_id_> | [ moduleItems ] |
 | ModuleItem | id | title |  | html_url | |
 | Page | page_id | title | body | html_url | |
 | Quizzes | id | title | description | html_url | [ questions ] |

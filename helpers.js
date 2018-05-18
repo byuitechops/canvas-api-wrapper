@@ -149,8 +149,8 @@ class Module extends Item {
     this._post = 'module'
     this._title = 'name'
     this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/modules#context_module_${this._id}`
-    this._subs = ['items']
-    Object.defineProperty(this,'items',{
+    this._subs = ['moduleItems']
+    Object.defineProperty(this,'moduleItems',{
       value:new ModuleItems(course,id),
       enumerable:true,
     })
