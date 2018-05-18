@@ -284,18 +284,18 @@ The abstract class for the items to inherit from
 
 
 ## Item Gets and Sets
-| Type | Title | Html | Url | Sub Items Lists |
-|------------|-------|------|-----|------|
-| Course | name | | /courses/<_course_> | files, folders, assignments, discussions, modules, pages, quizzes |
-| Assignment | name | description | html_url | |
-| Discussion | title | message | html_url | |
-| File | display_name |  | /files/?preview=<_id_> | |
-| Folder | name | | folders_url | |
-| Module | name | | /modules#context_module_<_id_> | items |
-| ModuleItem | title |  | html_url | |
-| Page | title | body | html_url | |
-| Quizzes | title | description | html_url | questions |
-| QuizQuestion | question_name | question_text | /quizzes/<_quiz_>/edit#question_<_id_> | |
+| Type | getId | getTitle/setTitle | getHtml/setHtml | getUrl | Sub Items Lists _(The additional properties which contain subitems)_ |
+|------------|-------|------|-----|------|---|
+| Course | id | name | | /courses/<_course_> | files, folders, assignments, discussions, modules, pages, quizzes |
+| Assignment | id | name | description | html_url | |
+| Discussion | id | title | message | html_url | |
+| File | id | display_name |  | /files/?preview=<_id_> | |
+| Folder | id | name | | folders_url | |
+| Module | id | name | | /modules#context_module_<_id_> | items |
+| ModuleItem | id | title |  | html_url | |
+| Page | page_id | title | body | html_url | |
+| Quizzes | id | title | description | html_url | questions |
+| QuizQuestion | id | question_name | question_text | /quizzes/<_quiz_>/edit#question_<_id_> | |
 
 [Files]: #files-extends-items "Files"
 [Folders]: #folders-extends-items "Folders"
