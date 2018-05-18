@@ -67,7 +67,7 @@ canvas.domain = 'byui';
 // are melting. So when your account goes under the 'rateLimitBuffer'
 // this module will halt the requests until it gets filled back to 
 // the 'rateLimitBuffer'. Give it a pretty large buffer, it tends to 
-// go quite a ways past the buffer before I catch it.
+// go quite a ways past the buffer before this module catches it.
 canvas.rateLimitBuffer = 300;
 
 // How many to send synchronously at the same time, the higher this
