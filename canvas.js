@@ -1,6 +1,5 @@
-const got = require('got')
+const tiny = require('tiny-json-http')
 const promiseLimit = require('promise-limit')
-const stack = require('callsite')
 const url = require('url')
 const util = require('util')
 
@@ -16,26 +15,44 @@ let queue = promiseLimit(30),
   nextSendTime = Date.now(),
   lastOverBuffer = 0,
   rateLimitRemaining = 700,
-  baseUrl = `http://${settings.domain}.instructure.com`
+  baseUrl = `https://${settings.domain}.instructure.com`
 
 // The center of the universe
-async function call(blame,path, options = {}) {
+async function canvas(path, body, callback) {
   // Don't let the queue build up too high
   while(queue.queue > 40) await new Promise(res => setTimeout(res,500))
   
-  // Resolving the path
+  // Check the Api Token
+  if(!settings.apiToken) throw new Error('Canvas API Token was not set')
+  
+  // Fix the parameters
+  if(typeof body == 'function'){ callback = body; body = undefined }
+
+  // Force it to be a Promise
+  if(callback){return util.callbackify(canvas.bind(this))(path,body,callback)}
+  
+  // Fix the Method
+  var method
+  if(Object.keys(this).length == 1 && this.method){
+    method = this.method && this.method.toLowerCase()
+  } else {
+    method = 'get'
+  }
+  if(!['get','post','put','del'].includes(method)){
+    throw new Error('Method was not get, post, put or del')
+  }
+
   path = new url.URL(url.resolve(baseUrl,path))
   
-  // Setting up the options
-  options = Object.assign({
-    method:this.method,
-  },options)
-  // Always use json even if the user specifies not to
-  options.json = true
-  // Set the authorization token
-  options.headers = Object.assign({
-    Authorization: 'Bearer '+settings.apiToken,
-  },options.headers)
+  var options = {
+    // Resolving the path
+    url: path.href,
+    data: body,
+    headers: {
+      Authorization: 'Bearer '+settings.apiToken,
+      "Content-Type":"application/json"
+    }
+  }
   
   // Make the request (with the timing checks and stuff)
   let response = await queue(async () => {
@@ -50,8 +67,8 @@ async function call(blame,path, options = {}) {
       await new Promise(res => setTimeout(res,settings.checkStatusInterval))
       // See what the situation is now
       try{
-        let response = await got(url.resolve(baseUrl,'/api/v1/users/self'),{
-          method: 'HEAD',
+        let response = await tiny.get({
+          url:url.resolve(baseUrl,'/api/v1/users/self'),
           headers:{
             Authorization: 'Bearer '+settings.apiToken
           }
@@ -75,9 +92,11 @@ async function call(blame,path, options = {}) {
     }
 
     // Finally make the actual call
-    return got(path.href,options).catch(err => {
-      // editing the err so that the call stack points to the owner
-      throw combineErrors(err,blame)
+    return tiny[method](options).catch(err => {
+      var myerr = new Error(`${method.toUpperCase()} ${path.href} failed with: ${err.toString().match(/\d+$/)}
+    ${body ? `${method=='get'?'Query Object':'Request Body'}:\n\t${util.inspect(body,{depth:null})}` : ''}
+    Response Body:\n\t${util.inspect(err.body,{depth:null})}`)
+      throw myerr
     })
   })
 
@@ -92,7 +111,7 @@ async function call(blame,path, options = {}) {
     let responses = await Promise.all(Array(links.last.page-1).fill().map((n,i) => i+2).map(page => {
       let path = new url.URL(links.current.path)
       path.searchParams.set('page',page)
-      return call(blame,path.href)
+      return canvas(path.href)
     }))
     try{
       response.body = response.body.concat(...responses)
@@ -104,17 +123,6 @@ async function call(blame,path, options = {}) {
   return response.body
 }
 
-// Mashes the callstack into the got error
-function combineErrors(err,stack){
-  let i = 0, str = err.toString()+'\n'
-  while(stack[i].getFileName() == __filename){i++}
-  for(;i < stack.length; i++){
-    str+= `    at ${stack[i].getFunctionName() || 'anonymous'} (${stack[i].getFileName()}:${stack[i].getLineNumber()})\n`
-  }
-  err.stack = str
-  return err
-}
-
 // Parses canvas's crazy pagination method
 function parseLink(str){
   if(str){
@@ -124,22 +132,11 @@ function parseLink(str){
   }
 }
 
-// Is responsible for our making our crazy function signiture
-function canvas(path,options,callback){
-  // console.log(this.method || (options && options.method) || 'GET',path)
-  if(!settings.apiToken){
-    throw new Error('Canvas API Token was not set')
-  }
-  if(typeof options == 'function'){
-    callback = options
-    options = {}
-  }
-  if(callback){return util.callbackify(canvas.bind(this))(...arguments)}
-
-  return call.call(this,stack(),path,options)
-}
-
 Object.defineProperties(canvas,{
+  get: { get: () => canvas.bind({method:'GET'}) },
+  post: { get: () => canvas.bind({method:'POST'}) },
+  put: { get: () => canvas.bind({method:'PUT'}) },
+  delete: { get: () => canvas.bind({method:'DEL'}) },
   apiToken:{ set: val => settings.apiToken = val },
   minSendInterval:{ set: val => settings.minSendInterval = val },
   checkStatusInterval:{ set: val => settings.checkStatusInterval = val },

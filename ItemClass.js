@@ -183,10 +183,7 @@ module.exports = class Item {
     // If nothing has changed then don't bother
     var [thisChanged,childrenChanged] = this.getChanged()
     if(thisChanged){
-      var data = await canvas(this.getPath(),{
-        method: 'PUT',
-        body: this.getPostbody()
-      })
+      var data = await canvas.put(this.getPath(),this.getPostbody())
       this.setData(data)
     }
     if(childrenChanged){
@@ -202,9 +199,7 @@ module.exports = class Item {
   async delete(callback=undefined){
     if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
 
-    var data = await canvas(this.getPath(),{
-      method:'DELETE'
-    })
+    var data = await canvas.delete(this.getPath())
     this.setData(data)
   }
   /**
@@ -215,10 +210,7 @@ module.exports = class Item {
   async create(callback=undefined){
     if(callback){return util.callbackify(this.create.bind(this))(...arguments)}
 
-    var data = await canvas(this.getPath(false),{
-      method:'POST',
-      body: this.getPostbody()
-    })
+    var data = await canvas.post(this.getPath(false),this.getPostbody())
     this.setData(data)
     this._id = data.id
     return this
