@@ -286,7 +286,7 @@ The abstract class for the items to inherit from
 ## Item Gets and Sets
 | Type | Title | Html | Url | Sub Items Lists |
 |------------|-------|------|-----|------|
-| Course | name | | /courses/<_course_> | files, assignments, discussions, modules, pages, quizzes |
+| Course | name | | /courses/<_course_> | files, folders, assignments, discussions, modules, pages, quizzes |
 | Assignment | name | description | html_url | |
 | Discussion | title | message | html_url | |
 | File | display_name |  | /files/?preview=<_id_> | |
