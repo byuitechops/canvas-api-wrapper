@@ -11,7 +11,7 @@ class Course extends Item{
 
     this._post = 'course'
     this._title = 'name'
-    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}`
+    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}`
     this._subs = ['files','folders','assignments','discussions','modules','pages','quizzes']
 
     Object.defineProperties(this,{
@@ -102,7 +102,7 @@ class File extends Item {
     super(course,id)
     this._path = 'files'
     this._title = 'display_name'
-    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}/files/?preview=${this._id}`
+    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/files/?preview=${this._id}`
     delete this.create
   }
   setTitle(value){
@@ -148,7 +148,7 @@ class Module extends Item {
     this._path = 'modules'
     this._post = 'module'
     this._title = 'name'
-    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}/modules#context_module_${this._id}`
+    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/modules#context_module_${this._id}`
     this._subs = ['items']
     Object.defineProperty(this,'items',{
       value:new ModuleItems(course,id),
@@ -241,7 +241,7 @@ class QuizQuestion extends Item {
     this._post = 'question'
     this._title = 'question_name'
     this._html = 'question_text'
-    this._url = `https://${canvas.domain}.instructure.com/courses/${this._course}/quizzes/${this._quiz}/edit#question_${this._id}`
+    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/quizzes/${this._quiz}/edit#question_${this._id}`
   }
 }
 

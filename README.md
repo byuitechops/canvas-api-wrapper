@@ -3,7 +3,7 @@ This module wraps the [Canvas Api](https://canvas.instructure.com/doc/api/all_re
 ``` js
 // Example: Publish all Modules
 const canvas = require('canvas-api-wrapper')
-canvas.domain = 'example'
+canvas.subdomain = 'example'
 
 // Gets the course shell (doesn't send any requests)
 const course = canvas.getCourse(19284)
@@ -38,7 +38,8 @@ npm i --save canvas-api-wrapper
 #### Setup
 ``` javascript
 var canvas = require('canvas-api-wrapper')
-canvas.domain = '<sub domain>' // default: byui
+//  https://<subdomain>.instructure.com (default: byui)
+canvas.subdomain = '<subdomain>' 
 ```
 Authorization:
 ```js
@@ -61,8 +62,8 @@ rate limit. But you may want to tweek the settings to speed it up or slow it
 down
 ```js
 // the subdomain under canvas 
-//  https://<domain>.instructure.com
-canvas.domain = 'byui';
+//  https://<subdomain>.instructure.com
+canvas.subdomain = 'byui';
 
 // Canvas uses a rate-limit point system to handle spamming. Canvas
 // currently fills your account to 700 'points' though subject to change

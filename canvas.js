@@ -7,7 +7,7 @@ const settings = {
   apiToken: process.env.CANVAS_API_TOKEN || '',
   minSendInterval: 10,
   checkStatusInterval: 2000,
-  domain:'byui'
+  subdomain:'byui'
 }
 
 // I hate global variables, but somehow I need to save info from call to call
@@ -15,7 +15,7 @@ let queue = promiseLimit(30),
   nextSendTime = Date.now(),
   lastOverBuffer = 0,
   rateLimitRemaining = 700,
-  baseUrl = `https://${settings.domain}.instructure.com`
+  baseUrl = `https://${settings.subdomain}.instructure.com`
 
 // The center of the universe
 async function canvas(path, body, callback) {
@@ -93,8 +93,7 @@ async function canvas(path, body, callback) {
 
     // Finally make the actual call
     return tiny[method](options).catch(err => {
-      var myerr = new Error(`${method.toUpperCase()} ${path.href} failed with: ${err.toString().match(/\d+$/)}
-    ${body ? `${method=='get'?'Query Object':'Request Body'}:\n\t${util.inspect(body,{depth:null})}` : ''}
+      var myerr = new Error(`${method.toUpperCase()} ${path.href} failed with: ${err.toString().match(/\d+$/)}${body ? `\n    ${method=='get'?'Query Object':'Request Body'}:\n\t${util.inspect(body,{depth:null})}` : ''}
     Response Body:\n\t${util.inspect(err.body,{depth:null})}`)
       throw myerr
     })
@@ -140,12 +139,12 @@ Object.defineProperties(canvas,{
   apiToken:{ set: val => settings.apiToken = val },
   minSendInterval:{ set: val => settings.minSendInterval = val },
   checkStatusInterval:{ set: val => settings.checkStatusInterval = val },
-  domain:{ 
+  subdomain:{ 
     set: val => {
-      settings.domain = val 
-      baseUrl = `https://${settings.domain}.instructure.com`
+      settings.subdomain = val 
+      baseUrl = `https://${settings.subdomain}.instructure.com`
     },
-    get: () => settings.domain
+    get: () => settings.subdomain
   },
   callLimit:{ 
     set: val => {

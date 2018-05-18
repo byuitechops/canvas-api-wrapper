@@ -63,8 +63,8 @@ module.exports = class Items extends Array{
    * @async
    * @param {Function} [callback] - If not specified, returns a promise
    */
-  async updateAll(callback=undefined){
-    if(callback){return util.callbackify(this.updateAll.bind(this))(...arguments)}
+  async update(callback=undefined){
+    if(callback){return util.callbackify(this.update.bind(this))(...arguments)}
 
     await Promise.all(this.map(item => item.update())) 
   }
@@ -86,16 +86,12 @@ module.exports = class Items extends Array{
     return item
   }
   /**
-   * Retrieves all of the items from canvas
+   * Retrieves all of the items
    * @async
    * @param {function} [callback] - If not specified, returns a promise 
    */
-  async getAll(includeSub=false,callback=undefined){
-    if(typeof inclueSub == 'function'){
-      callback = includeSub
-      includeSub = false
-    }
-    if(callback){return util.callbackify(this.getAll.bind(this))(...arguments)}
+  async get(callback=undefined){
+    if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
 
     // clear our current array
     this.length = 0
@@ -105,9 +101,17 @@ module.exports = class Items extends Array{
       var item = this._classify(datum)
       this.push(item)
     })
-    if(includeSub){
-      await Promise.all(this.map(item => item.getSub()))
-    }
+    return this
+  }
+  /**
+   * Retrieves all of the items with their sub items
+   * @async
+   * @param {function} [callback] - If not specified, returns a promise 
+   */
+  async getComplete(callback=undefined){
+    if(callback){return util.callbackify(this.getComplete.bind(this))(...arguments)}
+    await this.get()
+    await Promise.all(this.map(item => item.getSub()))
     return this
   }
   /**
@@ -116,16 +120,19 @@ module.exports = class Items extends Array{
    * @param {number} id - The id of the item to get
    * @param {function} [callback] - If not specified, returns a promise 
    */
-  async getOne(id,includeSub=false,callback=undefined){
-    if(typeof inclueSub == 'function'){
-      callback = includeSub
-      includeSub = false
-    }
+  async getOne(id,callback=undefined){
     if(callback){return util.callbackify(this.getOne.bind(this))(...arguments)}
-
+    
     var item = this._constructItem(id)
-    await item.get(includeSub)
+    await item.get()
     this.push(item)
+    return item
+  }
+  async getOneComplete(id,callback=undefined){
+    if(callback){return util.callbackify(this.getOneComplete.bind(this))(...arguments)}
+    
+    var item = await this.getOne(id)
+    await item.getSub()
     return item
   }
   /**

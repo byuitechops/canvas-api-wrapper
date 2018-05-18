@@ -149,7 +149,7 @@ module.exports = class Item {
    * @private
    */
   async getSub(){
-    await Promise.all(this.getSubs().map(sub => sub.getAll(true)))
+    await Promise.all(this.getSubs().map(sub => sub.getComplete()))
     // reset the has changed
     this._original = JSON.stringify(this)
   }
@@ -159,22 +159,25 @@ module.exports = class Item {
    * @param {function} [callback] If not specified, returns a promise 
    * @return {Item} this
    */
-  async get(includeSub=false,callback=undefined){
-    if(typeof includeSub == 'function'){
-      callback = includeSub
-      includeSub = false
-    }
+  async get(callback=undefined){
     // Fancy boilerplate to recursivly callbackify if there is a callback
     if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
     
     var data = await canvas(this.getPath())
     
-    if(includeSub){
-      await this.getSub()
-    }
-
     this.setData(data)
 
+    return this
+  }
+  /**
+   * Retrieves this item from canvas and all of it's sub items
+   * @async
+   * @param {function} [callback] If not specified, returns a promise 
+   * @return {Item} this
+   */
+  async getComplete(callback=undefined){
+    await this.get()
+    await this.getSub()
     return this
   }
   /**
@@ -192,7 +195,7 @@ module.exports = class Item {
     }
     if(childrenChanged){
       // Update all of the children as well
-      await Promise.all(this.getSubs().map(sub => sub.updateAll()))
+      await Promise.all(this.getSubs().map(sub => sub.update()))
     }
   }
   /**
