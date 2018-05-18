@@ -61,10 +61,10 @@ down
 canvas.domain = 'byui';
 
 // Canvas uses a rate-limit point system to handle spamming. Canvas
-// fills your account to 700 'points' and subtracts from your 'points'
-// every time you make a call. If you go below 0 then canvas will start
-// sending you 403 (unauthorized) statuses or tell you that the servers
-// are melting. So when your account goes under the 'rateLimitBuffer'
+// currently fills your account to 700 'points' though subject to change
+// then subtracts from your 'points' every time you make a call. If 
+// you go below 0 then canvas will start sending you 403 (unauthorized) 
+// statuses. So when your account goes under the 'rateLimitBuffer'
 // this module will halt the requests until it gets filled back to 
 // the 'rateLimitBuffer'. Give it a pretty large buffer, it tends to 
 // go quite a ways past the buffer before this module catches it.
