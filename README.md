@@ -101,37 +101,32 @@ canvas('/api/v1/courses/10698/modules', function(err,modules){
 	console.log(modules)
 })
 ```
-Include post body under the `body` property in options
+If a post, put, or delete request the second argument is the body
 ```js
 await canvas.post('/api/v1/courses/10698/modules',{
-	body:{
-		module:{
-			name:"New Module"
-		}
+	module:{
+		name:"New Module"
 	}
 })
 ```
-Also useful is the `query` property which will build the querystring from an object
+
 ``` js
 var queriedModules = await canvas('/api/v1/courses/10698/modules',{
-	query:{
 		search_term:'New Module'
-	}
 })
 ```
-See all documentation for the options parameter in the [got library](https://www.npmjs.com/package/got#user-content-api)
 
 ### Signatures
 ``` js
-canvas(url[,options][,callback]) // uses a GET request
+canvas(url[,query object][,callback]) // uses a GET request
 
-canvas.get(url[,options][,callback])
+canvas.get(url[,query object][,callback])
 
-canvas.post(url[,options][,callback])
+canvas.post(url[,body][,callback])
 
-canvas.put(url[,options][,callback])
+canvas.put(url[,body][,callback])
 
-canvas.delete(url[,options][,callback])
+canvas.delete(url[,body][,callback])
 
 canvas.getCourse(id)
 ```

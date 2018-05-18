@@ -22,9 +22,8 @@
   },
   "homepage": "https://github.com/byuitechops/canvas-api-wrapper#readme",
   "dependencies": {
-    "callsite": "^1.0.0",
-    "got": "^8.3.0",
-    "promise-limit": "^2.6.0"
+    "promise-limit": "^2.6.0",
+    "tiny-json-http": "^7.0.0"
   },
   "author": "Benjamin Earl",
   "license": "MIT"
