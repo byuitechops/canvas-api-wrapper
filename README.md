@@ -93,6 +93,8 @@ Use awaits or the optional callback
 ```js
 var modules = await canvas('/api/v1/courses/10698/modules')
 
+/* ----------- OR -------------- */
+
 canvas('/api/v1/courses/10698/modules', function(err,modules){
 	if(err) {
 		console.error(err);
