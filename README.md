@@ -9,7 +9,7 @@ canvas.subdomain = 'example'
 const course = canvas.getCourse(19284)
 
 // Gets the data for all modules for this course
-await course.modules.getAll()
+await course.modules.get()
 
 // modules inherits from Array, so Array methods work
 course.modules.forEach(module => {
@@ -23,6 +23,7 @@ await course.update()
 ## Table of contents
 - [Get Started](#get-started)
 - [Settings](#settings)
+- [Debugging](#debugging)
 - [Standard Calls](#standard-calls)
 - [Wrapped Calls](#wrapped-calls)
 	- [Course](#course-extends-item)
@@ -87,6 +88,29 @@ canvas.minSendInterval = 10;
 // to check what the buffer is at now, this should be pretty high because
 // there will be a lot of threads checking at the same time.
 canvas.checkStatusInterval = 2000;
+```
+
+## Debugging
+
+This library ambiguates which calls it's making quite a bit, especially with the [wrapped calls](#wrapped-calls). So to make sure it's not making excess calls. Or to just making sure it's doing what it should be you can assign `canvas.oncall` a function as an event handler.
+``` js
+canvas.oncall = function(e){
+	console.log(e)
+}
+const page = await canvas.getCourse(11310).pages.create({
+	title:'Hello World',
+	body:'<h1>Hello World</h1>',
+	published: true
+})
+/*
+{ method: 'POST',
+  url: 'https://byui.instructure.com/api/v1/courses/11310/pages/',
+  body:
+   { wiki_page:
+      { title: 'Hello World',
+        body: '<h1>Hello World</h1>',
+				published: true } } }
+*/
 ```
 
 ## Standard Calls
@@ -156,10 +180,10 @@ course.getTitle()
 course.is_public = true
 await course.update()
 
-// turning on the includeSub option, will retrieve every single item and 
+// using getComplete, will retrieve every single item and 
 // their sub items in the course. This is not recommended (of course) but 
 // can be helpful in certain situations where you need every item
-await course.get(true)
+await course.getComplete()
 course.quizzes[0].questions[0].getTitle()
 course.modules[0].moduleItems[0].getTitle()
 course.assignments[0].getTitle()
@@ -174,12 +198,12 @@ await course.update()
 
 The abstract class which all of the lists of items inherit from
 
-- _async_ `updateAll( [callback] )`
+- _async_ `update( [callback] )`
 	- Updates all of the items that have had changes made to them or their children
 
 ``` js
 const course = canvas.getCourse(19823)
-await course.assignments.getAll()
+await course.assignments.get()
 course.assignments.forEach(assignment => {
 	if(assignment.getTitle() == 'potato'){
 		assignment.setTitle('Baked Potato')
@@ -187,7 +211,7 @@ course.assignments.forEach(assignment => {
 	}
 })
 // Only updates items named potato, because those were the only ones changed
-await course.assignments.updateAll()
+await course.assignments.update()
 ```
 
 - _async_ `create( data, [callback] )` <[Item](#item)>
@@ -204,35 +228,52 @@ const page = await course.pages.create({
 console.log(page.getId())
 ```
 
-- _async_ `getAll( [includeSub] [,callback]  )` <**[Item]**>
+- _async_ `get( [callback]  )` <**[Item]**>
 	- Retrieves all of the children items from canvas
-	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz` also whether to include the `body` in the `page` object. Defaults to `false`
 ``` js
 const course = canvas.getCourse(19823)
-await course.modules.getAll()
-console.log(course.modules)
-
-// using the includeSub option also gets all of the items for each module
-await course.modules.getAll(true)
-console.log(course.modules[0].moduleItems)
+// you don't have to save it to a variable, 
+// you can also just access the array through `course.modules`
+// this just saves you from writing `course` everywhere
+const modules = await course.modules.get()
+console.log(modules)
 ```
 
-- _async_ `getOne( id, [includeSub] [,callback] )` <[Item](#item)>
+- _async_ `getComplete( [callback]  )` <**[Item]**>
+	- Retrieves all of the children items from canvas and all of their sub items such as the `questions` in a `quiz` or the `body` in a `page`
+``` js
+const course = canvas.getCourse(19823)
+const modules = await course.modules.getComplete()
+// normally you would have to call `get()` on each of the
+// modules ( modules[0].get() ) in order to get the moduleItems
+console.log(modules[0].moduleItems)
+```
+
+- _async_ `getOne( id, [callback] )` <[Item](#item)>
 	- Retrieves a single item from canvas by id
 	- `id` <**number**> the id of the item to grab
-	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
 ``` js
 const course = canvas.getCourse(19823)
 const folder = course.folders.getOne(114166)
 console.log(folder)
 ```
+
+- _async_ `getOneComplete( id, [callback] )` <[Item](#item)>
+	- Retrieves a single item from canvas by id including all of it's sub items such as the `questions` in a `quiz` ( the `body` in `page` is already included because your only getting a single item )
+	- `id` <**number**> the id of the item to grab
+``` js
+const course = canvas.getCourse(19823)
+const quiz = course.quizzes.getOneComplete(114166)
+console.log(quiz.questions[0])
+```
+
 - _async_ `delete( id , [callback] )`
 	- Removes an item from canvas, and from the local list
 	- `id` <**number**> the id of the item to delete
 ``` js
 const course = canvas.getCourse(19823)
-await course.quizzes.getAll()
-const questions = await course.quizzes[0].questions.getAll()
+await course.quizzes.get()
+const questions = await course.quizzes[0].questions.get()
 await questions.delete(questions[0].getId())
 ```
 ### Item
@@ -246,9 +287,10 @@ The abstract class for the items to inherit from
 - `setHtml( html )`
 - `getUrl()` <**string**>
 - `getSubs()` <**[Items]**> - Array of children [Items](#items-extends-array)
-- _async_ `get( [includeSub] [,callback] )` <[Item](#item)>
+- _async_ `get( [callback] )` <[Item](#item)>
 	- Retrieves the item from canvas
-	- `includeSub` <**Boolean**> Whether to also get the sub items such as `questions` in `quiz`. Defaults to `false`
+- _async_ `getComplete( [callback] )` <[Item](#item)>
+	- Retrieves the item from canvas including the sub items such as the `questions` in a `quiz` ( the `body` in `page` is already included because your only getting a single item )
 - _async_ `update( [callback] )`
 	- Only updates if properties have been changed on the Item since it was last gotten, also updates all of it's sub children who have been changed
 - _async_ `delete( [callback] )`

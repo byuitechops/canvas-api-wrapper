@@ -195,7 +195,7 @@ class Page extends Item {
     this._html = 'body'
     this._url = 'html_url'
   }
-  async retrieveSub(){
+  async getSub(){
     return this.get()
   }
 }

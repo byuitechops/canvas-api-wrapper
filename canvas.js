@@ -91,6 +91,15 @@ async function canvas(path, body, callback) {
       await new Promise(res => setTimeout(res,timeTillSend))
     }
 
+    // log that we are going to make a call
+    if(typeof settings.oncall == "function"){
+      settings.oncall({
+        method:method.toUpperCase(),
+        url: options.url,
+        body: options.data
+      })
+    }
+
     // Finally make the actual call
     return tiny[method](options).catch(err => {
       var myerr = new Error(`${method.toUpperCase()} ${path.href} failed with: ${err.toString().match(/\d+$/)}${body ? `\n    ${method=='get'?'Query Object':'Request Body'}:\n\t${util.inspect(body,{depth:null})}` : ''}
@@ -139,6 +148,10 @@ Object.defineProperties(canvas,{
   apiToken:{ set: val => settings.apiToken = val },
   minSendInterval:{ set: val => settings.minSendInterval = val },
   checkStatusInterval:{ set: val => settings.checkStatusInterval = val },
+  oncall: {
+    set: val => settings.oncall = val,
+    get: () => settings.oncall
+  },
   subdomain:{ 
     set: val => {
       settings.subdomain = val 
