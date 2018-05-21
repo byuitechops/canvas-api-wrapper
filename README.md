@@ -97,7 +97,7 @@ This library ambiguates which calls it's making quite a bit, especially with the
 canvas.oncall = function(e){
 	console.log(e)
 }
-const page = await canvas.getCourse(11310).pages.create({
+await canvas.getCourse(11310).pages.create({
 	title:'Hello World',
 	body:'<h1>Hello World</h1>',
 	published: true
@@ -109,7 +109,7 @@ const page = await canvas.getCourse(11310).pages.create({
    { wiki_page:
       { title: 'Hello World',
         body: '<h1>Hello World</h1>',
-				published: true } } }
+	published: true } } }
 */
 ```
 
