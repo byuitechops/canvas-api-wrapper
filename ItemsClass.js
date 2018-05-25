@@ -45,6 +45,11 @@ module.exports = class Items extends Array{
    * ( doing slice on this class returns just the array of sub items without this class wrapping it )
    */
   static get [Symbol.species]() { return Array; }
+  /**
+   * Attaches the delete event listener, so that we can remove it from the list if it
+   * get removed independently
+   * @param {Item} item 
+   */
   _attachListeners(item){
     item.on('delete',item => {
       var foundIndex = this.findIndex(n => n.getId() == item.getId())

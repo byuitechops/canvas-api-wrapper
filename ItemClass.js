@@ -34,6 +34,13 @@ module.exports = class Item {
     })
   }
   static get idProp(){ return 'id' }
+  /**
+   * Attach event listener, don't really know when you would use
+   * these so they aren't documented. I only needed them so that 
+   * the Parent Items knows if it got deleted independently
+   * @param {string} event 
+   * @param {function} func 
+   */
   on(event,func){
     if(typeof event != 'string'){
       throw TypeError("Event label needs to be a string")
@@ -44,6 +51,11 @@ module.exports = class Item {
     this._listeners[event] = this._listeners[event] || []
     this._listeners[event].push(func)
   }
+  /**
+   * Called when I'm sending an event
+   * @private
+   * @param {string} event 
+   */
   send(event){
     if(typeof event != 'string'){
       throw TypeError("Event label needs to be a string")
