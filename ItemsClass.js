@@ -2,6 +2,19 @@ const util = require('util')
 const canvas = require('./canvas')
 
 /**
+ * Parse the object if they use weird keys
+ * @param {object} data 
+ */
+function parse(data){
+  return Object.entries(data).reduce((obj,[key,value]) => {
+    var keys = key.replace(/]/g,'').split('[').map(n => n==''?0:n)
+    var node = keys.slice(0,-1).reduce((node,key,i) => node[key] = node[key] || (isNaN(keys[i+1])?{}:[]),obj)
+    node[keys[keys.length-1]] = value
+    return obj
+  },{})
+}
+
+/**
  * An abstract class which acts as a container for the different types of items
  * @public  @prop {number} course - the id of the course
  * @public  @prop {array}  items - the list of items it contains (only initalized after get functions)
@@ -95,6 +108,8 @@ module.exports = class Items extends Array{
     if(callback){return util.callbackify(this.create.bind(this))(...arguments)}
 
     var item = this._constructItem()
+    data = parse(data)
+    data = data[item._post] || data
     item.setData(data)
     await item.create()
     this.push(item)
