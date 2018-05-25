@@ -4,7 +4,7 @@
   "description": "Simplifies the already simple canvas api calls, and handles pagenation",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha tests"
   },
   "repository": {
     "type": "git",
@@ -26,5 +26,10 @@
     "tiny-json-http": "^7.0.0"
   },
   "author": "Benjamin Earl",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "better-assert": "^1.0.2",
+    "mocha": "^5.2.0",
+    "should": "^13.2.1"
+  }
 }

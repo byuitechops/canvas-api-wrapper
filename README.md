@@ -3,7 +3,7 @@ This module wraps the [Canvas Api](https://canvas.instructure.com/doc/api/all_re
 ``` js
 // Example: Publish all Modules
 const canvas = require('canvas-api-wrapper')
-canvas.subdomain = 'example'
+canvas.subdomain = 'example' // default:byui
 
 // Gets the course shell (doesn't send any requests)
 const course = canvas.getCourse(19284)
@@ -228,7 +228,7 @@ const page = await course.pages.create({
 console.log(page.getId())
 ```
 
-- _async_ `get( [callback]  )` <**[Item]**>
+- _async_ `get( [callback]  )` <**[[Item](#item)]**>
 	- Retrieves all of the children items from canvas
 ``` js
 const course = canvas.getCourse(19823)
@@ -239,7 +239,7 @@ const modules = await course.modules.get()
 console.log(modules)
 ```
 
-- _async_ `getComplete( [callback]  )` <**[Item]**>
+- _async_ `getComplete( [callback]  )` <**[[Item](#item)]**>
 	- Retrieves all of the children items from canvas and all of their sub items such as the `questions` in a `quiz` or the `body` in a `page`
 ``` js
 const course = canvas.getCourse(19823)
@@ -294,9 +294,7 @@ The abstract class for the items to inherit from
 - _async_ `update( [callback] )`
 	- Only updates if properties have been changed on the Item since it was last gotten, also updates all of it's sub children who have been changed
 - _async_ `delete( [callback] )`
-	- Use the delete property on [Items](#items-extends-array) instead, to delete the local copy
-- _async_ `create( [callback] )`
-	- creates the item with all of it's current properties, use the create property on [Items](#items-extends-array) instead.
+	- Will delete item, and remove it from it's parent list
 
 ### Assignments _extends_ [Items](#items-extends-array)
 ### Assignment _extends_ [Item](#item)
@@ -307,7 +305,6 @@ The abstract class for the items to inherit from
 ### Files _extends_ [Items](#items-extends-array)
 - Doesn't have a create method
 ### File _extends_ [Item](#item)
-- Doesn't have a create method
 
 ### Folders _extends_ [Items](#items-extends-array)
 ### Folders _extends_ [Item](#item)
@@ -331,15 +328,15 @@ The abstract class for the items to inherit from
 ## Item Gets and Sets
 | Type | getId | getTitle/setTitle | getHtml/setHtml | getUrl | getSubs |
 |------------|-------|------|-----|------|---|
-| Course | id | name | | /courses/<_course_> | [ files, folders, assignments, discussions, modules, pages, quizzes ] |
+| Course | id | name | | /courses/<_course_> | [ files<[Files]>, folders<[Folders]>, assignments<[Assignments]>, discussions<[Discussions]>, modules<[Modules]>, pages<[Pages]>, quizzes<[Quizzes]> ] |
 | Assignment | id | name | description | html_url | |
 | Discussion | id | title | message | html_url | |
 | File | id | display_name |  | /files/?preview=<_id_> | |
 | Folder | id | name | | folders_url | |
-| Module | id | name | | /modules#context_module_<_id_> | [ moduleItems ] |
+| Module | id | name | | /modules#context_module_<_id_> | [ moduleItems<[ModuleItems]> ] |
 | ModuleItem | id | title |  | html_url | |
 | Page | page_id | title | body | html_url | |
-| Quizzes | id | title | description | html_url | [ questions ] |
+| Quizzes | id | title | description | html_url | [ questions<[QuizQuestions]> ] |
 | QuizQuestion | id | question_name | question_text | /quizzes/<_quiz_>/edit#question_<_id_> | |
 
 [Files]: #files-extends-items "Files"

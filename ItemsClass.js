@@ -20,6 +20,9 @@ module.exports = class Items extends Array{
       course:{
         writable:true,
         value:id
+      },
+      parentId:{
+        writable:true,
       }
     })
   }
@@ -29,6 +32,14 @@ module.exports = class Items extends Array{
    * ( doing slice on this class returns just the array of sub items without this class wrapping it )
    */
   static get [Symbol.species]() { return Array; }
+  _attachListeners(item){
+    item.on('delete',item => {
+      var foundIndex = this.findIndex(n => n.getId() == item.getId())
+      if(foundIndex != -1){
+        this.splice(foundIndex,1)
+      }
+    })
+  }
   /**
    * Constructs an instance of the child class
    * @private
@@ -39,7 +50,9 @@ module.exports = class Items extends Array{
     if(!this.childClass){
       throw new TypeError("Classes extending the Items class needs childClass defined")
     }
-    return new this.childClass(this.course,id)
+    var item = new this.childClass(this.course,id)
+    this._attachListeners(item)
+    return item
   }
   /**
    * Creates an instance of the child class and assigns it the data passed
@@ -56,7 +69,10 @@ module.exports = class Items extends Array{
    * Any of the childern have changed
    */
   hasChanged(){
-    return this.some(item => (n => n[0]||n[1])(item.getChanged()))
+    return this.some(item => {
+      var [thisChanged,childrenChanged] = item.getChanged()
+      return thisChanged || childrenChanged
+    })
   }
   /**
    * Updates all of the items
@@ -81,7 +97,6 @@ module.exports = class Items extends Array{
     var item = this._constructItem()
     item.setData(data)
     await item.create()
-    item._id = item[this.childClass.idProp]
     this.push(item)
     return item
   }
@@ -93,13 +108,15 @@ module.exports = class Items extends Array{
   async get(callback=undefined){
     if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
 
-    // clear our current array
-    this.length = 0
-
     var data = await canvas(this._constructItem().getPath(false))
     data.forEach(datum => {
       var item = this._classify(datum)
-      this.push(item)
+      var existing = this.find(n => n.getId() == item.getId())
+      if(existing){
+        existing.setData(datum)
+      } else {
+        this.push(item)
+      }
     })
     return this
   }
@@ -123,10 +140,16 @@ module.exports = class Items extends Array{
   async getOne(id,callback=undefined){
     if(callback){return util.callbackify(this.getOne.bind(this))(...arguments)}
     
-    var item = this._constructItem(id)
-    await item.get()
-    this.push(item)
-    return item
+    var existing = this.find(n => n.getId() == id)
+    if(existing){
+      await existing.get()
+      return existing
+    } else {
+      var item = this._constructItem(id)
+      await item.get()
+      this.push(item)
+      return item
+    }
   }
   async getOneComplete(id,callback=undefined){
     if(callback){return util.callbackify(this.getOneComplete.bind(this))(...arguments)}
@@ -147,7 +170,11 @@ module.exports = class Items extends Array{
     var foundIndex = this.findIndex(n => n.getId() == id)
     if(foundIndex != -1){
       await this[foundIndex].delete()
-      this.splice(foundIndex,1)
+      // Might already be removed because of the event listeners
+      foundIndex = this.findIndex(n => n.getId() == id)
+      if(foundIndex != -1){
+        this.splice(foundIndex,1)
+      }
     } else {
       var temp = this._constructItem(id)
       temp.delete()

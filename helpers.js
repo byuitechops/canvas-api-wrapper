@@ -159,11 +159,13 @@ class Module extends Item {
 class ModuleItems extends Items {
   constructor(courseId,moduleId){
     super(courseId)
-    this.module = moduleId
+    this.parentId = moduleId
     this.childClass = ModuleItem
   }
   _constructItem(id){
-    return new ModuleItem(this.course,this.module,id)
+    var item = new ModuleItem(this.course,this.parentId,id)
+    super._attachListeners(item)
+    return item
   }
 }
 class ModuleItem extends Item {
@@ -227,10 +229,12 @@ class QuizQuestions extends Items {
   constructor(courseId,quizId){
     super(courseId)
     this.childClass = Quiz
-    this.quiz = quizId
+    this.parentId = quizId
   }
   _constructItem(id){
-    return new QuizQuestion(this.course,this.quiz,id)
+    var item = new QuizQuestion(this.course,this.parentId,id)
+    super._attachListeners(item)
+    return item
   }
 }
 class QuizQuestion extends Item {

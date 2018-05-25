@@ -15,9 +15,7 @@ const canvas = require('./canvas')
 module.exports = class Item {
   constructor(course,id){
     Object.defineProperties(this,{
-      _course:{
-        value:course
-      },
+      _course:{ value:course },
       _id: {
         value:id,
         writable: true,
@@ -32,9 +30,28 @@ module.exports = class Item {
       _html: { writable: true },
       _title: { writable: true },
       _url: { writable: true },
+      _listeners: { value: {} }
     })
   }
   static get idProp(){ return 'id' }
+  on(event,func){
+    if(typeof event != 'string'){
+      throw TypeError("Event label needs to be a string")
+    }
+    if(typeof func != 'function'){
+      throw TypeError("Event handler needs to be a function")
+    }
+    this._listeners[event] = this._listeners[event] || []
+    this._listeners[event].push(func)
+  }
+  send(event){
+    if(typeof event != 'string'){
+      throw TypeError("Event label needs to be a string")
+    }
+    if(this._listeners[event]){
+      this._listeners[event].forEach(func => func(this))
+    }
+  }
   /**
    * Set the data of the item
    *  - purges the old data
@@ -166,6 +183,7 @@ module.exports = class Item {
     var data = await canvas(this.getPath())
     
     this.setData(data)
+    this.send('get')
 
     return this
   }
@@ -178,6 +196,8 @@ module.exports = class Item {
   async getComplete(callback=undefined){
     await this.get()
     await this.getSub()
+    this.send('getComplete')
+
     return this
   }
   /**
@@ -197,6 +217,7 @@ module.exports = class Item {
       // Update all of the children as well
       await Promise.all(this.getSubs().map(sub => sub.update()))
     }
+    this.send('update')
   }
   /**
   * Deletes the item from canvas
@@ -208,18 +229,19 @@ module.exports = class Item {
 
     var data = await canvas.delete(this.getPath())
     this.setData(data)
+    this.send('delete')
   }
   /**
    * Creates the item in canvas, with whatever properties it contains
    * @async
-   * @param {function} [callback] If not specified, returns a promise 
+   * @private - Use Items.create instead
    */
-  async create(callback=undefined){
-    if(callback){return util.callbackify(this.create.bind(this))(...arguments)}
-
+  async create(){
     var data = await canvas.post(this.getPath(false),this.getPostbody())
     this.setData(data)
-    this._id = data.id
+    this._id = data[this.constructor.idProp]
+    this.getSubs().forEach(sub => sub.parentId = this._id)
+    this.send('create')
     return this
   }
 }
