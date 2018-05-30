@@ -12,7 +12,7 @@ class Course extends Item{
     this._post = 'course'
     this._title = 'name'
     this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}`
-    this._subs = ['files','folders','assignments','discussions','modules','pages','quizzes']
+    this._subs = ['files','folders','assignments','discussions','modules','pages','quizzes','groups']
 
     Object.defineProperties(this,{
       files: {
@@ -41,6 +41,10 @@ class Course extends Item{
       },
       quizzes: {
         value:new Quizzes(course),
+        enumerable:true
+      },
+      groups:{
+        value:new Groups(course),
         enumerable:true
       }
     })
@@ -246,6 +250,54 @@ class QuizQuestion extends Item {
     this._title = 'question_name'
     this._html = 'question_text'
     this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/quizzes/${this._quiz}/edit#question_${this._id}`
+  }
+}
+/***********************
+* Groups
+************************/
+class Groups extends Items {
+  constructor(id){
+    super(id)
+    this.childClass = Group
+  }
+}
+class Group extends Item {
+  constructor(course,id){
+    super(course,id)
+    this._path = 'groups'
+    this._title = 'name'
+    this._html = 'description'
+    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/groups#tab-${this._id}`
+    this._subs = ['memberships']
+    Object.defineProperty(this,'memberships',{
+      value: new Memberships(course,this.getId()),
+      enumerable:true
+    })
+  }
+  getPath(includeId=true){
+    return includeId ? `/api/v1/groups/${this._id}` : super.getPath(false)
+  }
+}
+class Memberships extends Items {
+  constructor(courseId,groupId){
+    super(courseId)
+    this.childClass = Membership
+    this.parentId = groupId
+  }
+  _constructItem(id){
+    var item = new Membership(this.course,this.parentId,id)
+    super._attachListeners(item)
+    return item
+  }
+}
+class Membership extends Item {
+  constructor(course,group,id){
+    super(course,id)
+    Object.defineProperty(this,'_group',{value:group,writable:false})
+    // this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/quizzes/${this._quiz}/edit#question_${this._id}`
+  }
+  getPath(includeId=true){
+    return `/api/v1/groups/${this._group}/memberships/${includeId ? this._id : ''}`
   }
 }
 
