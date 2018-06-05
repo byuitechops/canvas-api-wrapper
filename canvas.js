@@ -113,14 +113,23 @@ async function canvas(path, body, callback) {
   // console.log(Math.floor(this.RateLimitRemaining),Number(response.headers['x-request-cost']).toFixed(3))
   // Turn my links string into a useful object
   let links = parseLink(response.headers.link)
-
   // Paginate recursivly if need to paginate
   if(links && links.current.page == 1){
-    let responses = await Promise.all(Array(links.last.page-1).fill().map((n,i) => i+2).map(page => {
+    let responses = []
+    if(links.last){
       let path = new url.URL(links.current.path)
-      path.searchParams.set('page',page)
-      return canvas(path.href)
-    }))
+      responses = await Promise.all(Array(links.last.page-1).fill().map((n,i) => i+2).map(page => {
+        path.searchParams.set('page',page)
+        return canvas(path.href)
+      }))
+    } else {
+      let path = new url.URL(links.current.path)
+      for(var page = 2, r=['start']; r.length; page++){
+        path.searchParams.set('page',page)
+        r = await canvas(path.href)
+        responses.push(r)
+      }
+    }
     try{
       response.body = response.body.concat(...responses)
     } catch (e){
