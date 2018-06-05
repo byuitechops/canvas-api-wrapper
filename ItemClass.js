@@ -93,11 +93,16 @@ module.exports = class Item {
     if(!this._path){
       throw new TypeError("Class extending the Item class doesn't have path defined")
     }
-    var [path,includeCourseWhenIndividual=true,includeCourseWhenAll=true] = this._path
-    var includeCourse = individual ? includeCourseWhenIndividual : includeCourseWhenAll
+    let path = this._path, includeCourse=true
+    if(typeof this._path == 'function'){
+      path = path(this._parents,individual)
+    }
+    if(Array.isArray(path)){
+      [path,includeCourse=true] = path
+    }
     return [
       '/api/v1',
-      includeCourse && 'courses/'+this._course,
+      includeCourse && 'courses/'+this._parents[0],
       path.replace(/^\/|\/$/g,''),
       individual && String(this._id)
     ].filter(n => n).join('/')
@@ -146,6 +151,10 @@ module.exports = class Item {
   /** @return {[Items]} - array of subs */
   getSubs(){
     return this._subs.map(key => this[key])
+  }
+  /** @return {string} */
+  getType(){
+    return this.constructor.name
   }
   /**
    * @private

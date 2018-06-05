@@ -2,7 +2,7 @@ const api = require('./api')
 const Items = require('./ItemsClass')
 const Item = require('./ItemClass')
 const canvas = require('./canvas')
-const url = require('url')
+const URL = require('url')
 
 /**
  * Creates a class which inherits from the Item class and has a constructor
@@ -17,27 +17,25 @@ function createItemClass(name,settings){
     throw new TypeError("path needs to be defined in the settings")
   }
   // Setting all of the defaults
-  settings.path = Array.isArray(settings.path) ? settings.path : [settings.path]
   settings.children = settings.children || []
   settings.children = Array.isArray(settings.children) ? settings.children : [settings.children]
   settings.id = settings.id != undefined ? settings.id : 'id'
   // The constructor for the new class
-  function item(ids){
-    if(ids == undefined){
+  function item(parents,id){
+    if(parents == undefined){
       throw new TypeError('Needs to be created with the ids')
     }
+    const ids = parents.concat(id!=undefined ? [id] : [])
     // Resolving the functions in the settings
-    if(typeof settings.path[0] == 'function'){
-      settings.path[0] = settings.path[0](ids)
-    }
-    if(typeof settings.url == 'function'){
-      settings.url = url.resolve(`https://${canvas.subdomain}.instructure.com`,settings.url(ids))
+    let url = settings.url
+    if(typeof url == 'function'){
+      url = URL.resolve(`https://${canvas.subdomain}.instructure.com`,url(ids))
     }
     // Defining all of the private properties
     Object.defineProperties(this,{
-      _course:{ value:ids[0] },
+      _parents:{ value:parents },
       _id: {
-        value:ids[ids.length-1],
+        value:id,
         writable: true,
       },
       _original: { writable: true },
@@ -46,7 +44,7 @@ function createItemClass(name,settings){
       _post: { value: settings.postbody },
       _html: { value: settings.html },
       _title: { value: settings.title },
-      _url: { value: settings.url },
+      _url: { value: url },
       _listeners: { value: {} },
       _idProp: {value: settings.id }
     })
@@ -102,6 +100,6 @@ module.exports.getCourse = function getCourse(id){
   if(id == undefined){
     throw new TypeError("Expected the id of the course")
   }
-  var course = new Course([id])
+  var course = new Course([],id)
   return course
 }

@@ -55,8 +55,7 @@ module.exports = class Items extends Array{
     if(!this.childClass){
       throw new TypeError("Classes extending the Items class needs childClass defined")
     }
-    id = id != undefined ? [id] : []
-    var item = new this.childClass(this.ids.concat(id))
+    var item = new this.childClass(this.ids,id)
     this._attachListeners(item)
     return item
   }
@@ -72,6 +71,22 @@ module.exports = class Items extends Array{
     return item
   }
   /**
+   * Need to add this function so that functions in the api don't screw things up
+   * @private
+   * @param {array} data - array of items to add
+   */
+  setData(data){
+    data.forEach(datum => {
+      var item = this._classify(datum)
+      var existing = this.find(n => n.getId() == item.getId())
+      if(existing){
+        existing.setData(datum)
+      } else {
+        this.push(item)
+      }
+    })
+  }
+  /**
    * Any of the childern have changed
    */
   hasChanged(){
@@ -79,6 +94,10 @@ module.exports = class Items extends Array{
       var [thisChanged,childrenChanged] = item.getChanged()
       return thisChanged || childrenChanged
     })
+  }
+  /** @return {string} */
+  getType(){
+    return this.constructor.name
   }
   /**
    * Updates all of the items
@@ -96,7 +115,7 @@ module.exports = class Items extends Array{
    * @param {Object} data - The properties used to create the item
    * @param {Function} [callback] - If not specified, returns a promise 
    */
-  async create(data, callback=undefined){
+  async create(data={}, callback=undefined){
 
     if(callback){return util.callbackify(this.create.bind(this))(...arguments)}
 
@@ -117,15 +136,7 @@ module.exports = class Items extends Array{
     if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
 
     var data = await canvas(this._constructItem().getPath(false))
-    data.forEach(datum => {
-      var item = this._classify(datum)
-      var existing = this.find(n => n.getId() == item.getId())
-      if(existing){
-        existing.setData(datum)
-      } else {
-        this.push(item)
-      }
-    })
+    this.setData(data)
     return this
   }
   /**

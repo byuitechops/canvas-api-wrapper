@@ -1,3 +1,6 @@
+const canvas = require('./canvas')
+const ItemClass = require('./ItemClass')
+
 var example = {
   /*
     [Required] path can be a simple string or if needed a 
@@ -7,7 +10,7 @@ var example = {
       /api/v1/course/:course/path/:id
   */
   path: 'path',
-  path: ids => 'path',
+  path: parents => 'path',
   /* 
     You may need extra flexablility such a folders where the list of 
     folders is retrieved through /api/v1/course/:course/folders but
@@ -19,7 +22,7 @@ var example = {
       /api/v1/folders/:id
   */
   path: ['path',true,true],
-  path: [ids => 'path',true,true],
+  path: [parents => 'path',true,true],
   /* 
     [Optional] Sometimes the objects are wrapped in weird properties when being 
     created or updated. Such as pages which create object looks like 
@@ -64,7 +67,7 @@ var example = {
 
 module.exports = {
   course:{
-    path: [`courses`,false,false],
+    path: [`courses`,false],
     postbody:'course',
     title:'name',
     url: ([course]) => `/courses/${course}`,
@@ -90,6 +93,9 @@ module.exports = {
       name:'quizzes',
       type:'quiz',
     },{
+      name:'groupCategories',
+      type:'groupCategory'
+    },{
       name:'groups',
       type:'group'
     }],
@@ -99,13 +105,72 @@ module.exports = {
     postbody:'assignment',
     title:'name',
     html:'description',
-    url:'html_url'
+    url:'html_url',
+    children:[{
+      name:'overrides',
+      type:'override'
+    },{
+      name:'submissions',
+      type:'submission'
+    }]
+  },
+  override:{
+    path: ([,assignment]) => `assignments/${assignment}/overrides`,
+    postbody:'assignment_override',
+    title:'title'
+  },
+  submission: {
+    path: ([,assignment]) => `assignments/${assignment}/submissions`,
+    postbody:'submission',
+    id:'user_id',
+    html:'body',
+    url:'preview_url',
+    custom:{
+      delete(){
+        throw new Error("Can't delete a reply")
+      }
+    }
   },
   discussion:{
     path:'discussion_topics',
     title:'title',
     html:'message',
-    url:'html_url' 
+    url:'html_url',
+    children:{
+      name:'entries',
+      type:'entry'
+    }
+  },
+  entry:{
+    path:([,discussion]) => `discussion_topics/${discussion}/entries`,
+    html:'message',
+    children:{
+      name:'replies',
+      type:'reply'
+    },
+    custom:{
+      async getSub(){
+        if(this.has_more_replies === false){
+          this.replies.setData(this.recent_replies)
+        }
+        // ORIGINAL
+        await Promise.all(this.getSubs().map(sub => sub.getComplete()))
+        // reset the has changed
+        this._original = JSON.stringify(this)
+      }
+    }
+  },
+  reply:{
+    path:([,discussion,entry]) => `discussion_topics/${discussion}/entries/${entry}/replies`,
+    html:'message',
+    custom:{
+      update(){
+        throw new Error("Can't update a reply")
+      },
+      delete(){
+        throw new Error("Can't delete a reply")
+      }
+    }
   },
   file:{
     path:'files',
@@ -122,7 +187,7 @@ module.exports = {
     }
   },
   folder:{
-    path: ['folders',false],
+    path: (parents,individual) => ['folders',!individual],
     title: 'name',
     url: 'folders_url',
   },
@@ -137,7 +202,7 @@ module.exports = {
     }
   },
   moduleItem:{
-    path: ([course,module,id]) => `modules/${module}/items`,
+    path: ([,module]) => `modules/${module}/items`,
     postbody: 'module_item',
     title:'title',
     url:'html_url'
@@ -161,29 +226,64 @@ module.exports = {
     title:'title',
     html:'description',
     url:'html_url',
-    children:{
+    children:[{
       name:'questions',
       type:'question'
-    }
+    },{
+      name:'submissions',
+      type:'quizSubmission'
+    }]
   },
   question:{
-    path: ([course,quiz,id]) => `quizzes/${quiz}/questions`,
+    path: ([,quiz]) => `quizzes/${quiz}/questions`,
     postbody: 'question',
     title: 'question_name',
     html: 'question_text',
     url: ([course,quiz,id]) => `/courses/${course}/quizzes/${quiz}/edit#question_${id}`
   },
+  quizSubmission:{
+    path: ([,quiz]) => `quizzes/${quiz}/submissions`,
+    custom: {
+      async complete(callback=undefined){
+        if(callback){return util.callbackify(this.complete.bind(this))(...arguments)}
+
+        var data = await canvas.post(this.getPath()+'/complete',{
+          attempt:this.attempt,
+          validation_token:this.validation_token,
+          access_code: this.access_code
+        })
+        this.setData(data)
+      }
+    }
+  },
+  groupCategory:{
+    path: (parents,individual) => ['group_categories',!individual],
+    title: 'name',
+    url: ([course,id]) => `/courses/${course}/groups#tab-${id}`,
+    children:{
+      name:'groups',
+      type:'group'
+    }
+  },
   group:{
-    path: ['groups',false],
+    path: ([,category],individual) => {
+      if(individual){
+        return ['groups',false]
+      } else if(category){
+        return [`group_categories/${category}/groups`,false]
+      } else {
+        return 'groups'
+      }
+    },
     title: 'name',
     html: 'description',
-    url: ([course,id]) => `/courses/${course}/groups#tab-${id}`,
+    url: ([course,id]) => `/groups/${id}`,
     children: {
       name:'memberships',
       type:'membership'
     },
   },
   membership:{
-    path: [([course,group,id]) => `groups/${group}/memberships`,false,false]
+    path: parents => [`groups/${parents[parents.length-1]}/memberships`,false]
   }
 }
