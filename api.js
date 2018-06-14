@@ -173,7 +173,7 @@ module.exports = {
     }
   },
   file:{
-    path:'files',
+    path:(parents,individual) => ['files',!individual],
     title: 'display_name',
     url: ([course,id]) => `/courses/${course}/files/?preview=${id}`,
     custom:{
