@@ -113,6 +113,12 @@ class File extends Item {
     super.setTitle(value)
     this.name = value
   }
+  getPath(includeId=true){
+    if(!includeId){
+      return super.getPath(false)
+    }
+    return `/api/v1/files/${this._id}`
+  }
 }
 /***********************
 * Folders
