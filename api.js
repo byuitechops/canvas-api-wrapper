@@ -3,26 +3,30 @@ const ItemClass = require('./ItemClass')
 
 var example = {
   /*
-    [Required] path can be a simple string or if needed a 
-    function which takes the array of ids and returns a string
-    either way it will be coerced to
-      /api/v1/course/:course/path
-      /api/v1/course/:course/path/:id
+    [Required] path can be a number of things because it needs to be very flexable. 
+    
+    path <string> - the path is appended to the back of /api/v1/course/:course/
+
+    [path <string>, includeCourse=true <boolean>] - if an array then first element is the path, 
+    and second is whether to include the course (defaults to true)
+
+    function(parents <array>, isIndividual <boolean>){} <string>||<array> - if a function it is
+    passed the array of parent ids and whether the individual version is needed or not
+    (meaning that the id will be appended to the back) return value is the same as 
+    other path values
   */
-  path: 'path',
-  path: parents => 'path',
-  /* 
-    You may need extra flexablility such a folders where the list of 
-    folders is retrieved through /api/v1/course/:course/folders but
-    to get a single folder it is through /api/v1/folders/:id so there
-    are two options which are both defaulted to true
-    [path, includeCourseWhenIndividual, includeCourseWhenAll]
-    so for folders setting path to ['folders',false] will give you
-      /api/v1/course/:course/folders
-      /api/v1/folders/:id
-  */
-  path: ['path',true,true],
-  path: [parents => 'path',true,true],
+  path: 'path', 
+  // /api/v1/course/:course/path 
+  // /api/v1/course/:course/path/:id
+  path: ['path',false],
+  // /api/v1/path 
+  // /api/v1/path/:id
+  path: ([course,parentId,id],isIndividual) => `something/${parentId}/otherthing`,
+  // /api/v1/course/something/:parentId/otherthing
+  // /api/v1/course/something/:parentId/otherthing/:id
+  path: (parents,isIndividual) => ['path',!isIndividual],
+  // /api/v1/course/path
+  // /api/v1/path/:id
   /* 
     [Optional] Sometimes the objects are wrapped in weird properties when being 
     created or updated. Such as pages which create object looks like 
@@ -229,9 +233,6 @@ module.exports = {
     children:[{
       name:'questions',
       type:'question'
-    },{
-      name:'submissions',
-      type:'quizSubmission'
     }]
   },
   question:{

@@ -132,13 +132,6 @@ async function canvas(path, body, callback) {
     } catch (e){
       throw new Error('Assumption that paginating body is always an array or has only one property, was wrong')
     }
-  } else {
-    if(Object.keys(response.body).length == 1){
-      var key = Object.keys(response.body)[0]
-      if(typeof response.body[key] == 'object'){
-        response.body = response.body[key]
-      }
-    }
   }
 
   return response.body
