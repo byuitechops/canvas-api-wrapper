@@ -102,8 +102,17 @@ async function canvas(path, body, callback) {
 
     // Finally make the actual call
     return tiny[method](options).catch(err => {
-      var myerr = new Error(`${method.toUpperCase()} ${path.href} failed with: ${err.toString().match(/\d+$/)}${body ? `\n    ${method=='get'?'Query Object':'Request Body'}:\n\t${util.inspect(body,{depth:null})}` : ''}
-    Response Body:\n\t${util.inspect(err.body,{depth:null})}`)
+      var rbody
+      try{
+        JSON.parse(err.body)
+        rbody = util.inspect(err.body,{depth:null})
+      } catch (e){
+      }
+      var myerr = new Error([
+        `${method.toUpperCase()} ${path.href} failed with: ${err.toString().match(/\d+$/)}`,
+        body && `${method=='get'?'Query Object':'Request Body'}\n\t${util.inspect(body,{depth:null})}`,
+        rbody && `Response Body:\n\t${rbody}`
+      ].filter(n => n).join('\n    '))
       throw myerr
     })
   })
