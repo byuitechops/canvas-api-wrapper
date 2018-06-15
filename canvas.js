@@ -1,5 +1,5 @@
-const tiny = require('tiny-json-http')
 const promiseLimit = require('promise-limit')
+const got = require('got')
 const url = require('url')
 const util = require('util')
 
@@ -18,7 +18,7 @@ let queue = promiseLimit(30),
   baseUrl = `https://${settings.subdomain}.instructure.com`
 
 // The center of the universe
-async function canvas(path, body, callback) {
+async function canvas(method,path,body,callback) {
   // Don't let the queue build up too high
   while(queue.queue > 40) await new Promise(res => setTimeout(res,500))
   
@@ -29,17 +29,12 @@ async function canvas(path, body, callback) {
   if(typeof body == 'function'){ callback = body; body = undefined }
 
   // Force it to be a Promise
-  if(callback){return util.callbackify(canvas.bind(this))(path,body,callback)}
+  if(callback){return util.callbackify(canvas)(method,path,body,callback)}
   
   // Fix the Method
-  var method
-  if(Object.keys(this).length == 1 && this.method){
-    method = this.method && this.method.toLowerCase()
-  } else {
-    method = 'get'
-  }
-  if(!['get','post','put','del'].includes(method)){
-    throw new Error('Method was not get, post, put or del')
+  method = method.toUpperCase()
+  if(!['GET','POST','PUT','DELETE'].includes(method)){
+    throw new Error('Method was not get, post, put or delete')
   }
 
   path = new url.URL(url.resolve(baseUrl,path))
@@ -47,10 +42,12 @@ async function canvas(path, body, callback) {
   var options = {
     // Resolving the path
     url: path.href,
-    data: body,
+    method:method,
+    [method=='get' ? 'query' : 'body']: body,
+    json: true,
+    throwHttpErrors:false,
     headers: {
       Authorization: 'Bearer '+settings.apiToken,
-      "Content-Type":"application/json; charset=utf-8"
     }
   }
   
@@ -60,15 +57,14 @@ async function canvas(path, body, callback) {
     while(rateLimitRemaining < settings.rateLimitBuffer){
       // Display this message if has been at least a second since it was last displayed
       if(Date.now() - lastOverBuffer > settings.checkStatusInterval){
-        console.log(`Our rate-limit-remaining (${Number(rateLimitRemaining).toFixed(1)}) is below our buffer (${settings.rateLimitBuffer}), waiting a sec...`)
+        console.warn(`Our rate-limit-remaining (${Number(rateLimitRemaining).toFixed(1)}) is below our buffer (${settings.rateLimitBuffer}), waiting a sec...`)
         lastOverBuffer = Date.now()
       }
       // The waiting a second
       await new Promise(res => setTimeout(res,settings.checkStatusInterval))
       // See what the situation is now
       try{
-        let response = await tiny.get({
-          url:url.resolve(baseUrl,'/api/v1/users/self'),
+        let response = await got.head(url.resolve(baseUrl,'/api/v1/users/self'),{
           headers:{
             Authorization: 'Bearer '+settings.apiToken
           }
@@ -76,7 +72,7 @@ async function canvas(path, body, callback) {
         rateLimitRemaining = response.headers['x-rate-limit-remaining']
       } catch(e){
         // We couldn't even make the check
-        console.log('We\'re in trouble')
+        console.warn('We\'re in trouble')
       }
       if(rateLimitRemaining === undefined){
         throw new Error("There was no x-rate-limit-remaining header")
@@ -101,13 +97,15 @@ async function canvas(path, body, callback) {
     }
 
     // Finally make the actual call
-    return tiny[method](options).catch(err => {
-      var myerr = new Error([
-        `${method.toUpperCase()} ${path.href} failed with: ${err.toString().match(/\d+$/)}`,
-        body && `${method=='get'?'Query Object':'Request Body'}\n\t${util.inspect(body,{depth:null})}`,
-        typeof err.body == 'object' && `Response Body:\n\t${util.inspect(err.body,{depth:null})}`
-      ].filter(n => n).join('\n    '))
-      throw myerr
+    return got(path.href,options).then(res => {
+      if(res.statusCode !== 304 && (res.statusCode < 200 || res.statusCode > 299)){
+        throw new Error([
+          `${method.toUpperCase()} ${path.href} failed with: ${res.statusCode}`,
+          body && `${method=='get'?'Query Object':'Request Body'}\n\t${util.inspect(body,{depth:null})}`,
+          typeof res.body == 'object' && `Response Body:\n\t${util.inspect(res.body,{depth:null})}`
+        ].filter(n => n).join('\n    '))
+      }
+      return res
     })
   })
 
@@ -123,13 +121,13 @@ async function canvas(path, body, callback) {
       let path = new url.URL(links.current.path)
       responses = await Promise.all(Array(links.last.page-1).fill().map((n,i) => i+2).map(page => {
         path.searchParams.set('page',page)
-        return canvas(path.href)
+        return canvas('GET',path.href)
       }))
     } else {
       let path = new url.URL(links.current.path)
       for(var page = 2, r=['start']; r.length; page++){
         path.searchParams.set('page',page)
-        r = await canvas(path.href)
+        r = await canvas('GET',path.href)
         responses.push(r)
       }
     }
@@ -152,11 +150,11 @@ function parseLink(str){
   }
 }
 
-Object.defineProperties(canvas,{
-  get: { get: () => canvas.bind({method:'GET'}) },
-  post: { get: () => canvas.bind({method:'POST'}) },
-  put: { get: () => canvas.bind({method:'PUT'}) },
-  delete: { get: () => canvas.bind({method:'DEL'}) },
+module.exports = Object.defineProperties(canvas.bind(null,'GET'),{
+  get: { get: () => canvas.bind(null,'GET') },
+  post: { get: () => canvas.bind(null,'POST') },
+  put: { get: () => canvas.bind(null,'PUT') },
+  delete: { get: () => canvas.bind(null,'DELETE') },
   apiToken:{ set: val => settings.apiToken = val },
   minSendInterval:{ set: val => settings.minSendInterval = val },
   checkStatusInterval:{ set: val => settings.checkStatusInterval = val },
@@ -164,14 +162,14 @@ Object.defineProperties(canvas,{
     set: val => settings.oncall = val,
     get: () => settings.oncall
   },
-  subdomain:{ 
+  subdomain:{
     set: val => {
       settings.subdomain = val 
       baseUrl = `https://${settings.subdomain}.instructure.com`
     },
     get: () => settings.subdomain
   },
-  callLimit:{ 
+  callLimit:{
     set: val => {
       if(queue.queue == 0){
         queue = promiseLimit(val)
@@ -181,5 +179,3 @@ Object.defineProperties(canvas,{
     }
   },
 })
-
-module.exports = canvas
