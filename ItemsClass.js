@@ -184,12 +184,16 @@ module.exports = class Items extends Array{
    * @param {number} id - The id of the item to delete
    * @param {function} [callback] If not specified, returns a promise 
    */
-  async delete(id,callback=undefined){
+  async delete(id,params={},callback=undefined){
+    if(typeof params == 'function'){
+      callback = params
+      params = {}
+    }
     if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
 
     var foundIndex = this.findIndex(n => n.getId() == id)
     if(foundIndex != -1){
-      await this[foundIndex].delete()
+      await this[foundIndex].delete(params)
       // Might already be removed because of the event listeners
       foundIndex = this.findIndex(n => n.getId() == id)
       if(foundIndex != -1){
@@ -197,7 +201,7 @@ module.exports = class Items extends Array{
       }
     } else {
       var temp = this._constructItem(id)
-      temp.delete()
+      temp.delete(params)
     }
   }
 }

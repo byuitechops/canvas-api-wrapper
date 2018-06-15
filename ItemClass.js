@@ -236,10 +236,13 @@ module.exports = class Item {
   * @async
   * @param {function} [callback] If not specified, returns a promise 
   */
-  async delete(callback=undefined){
+  async delete(params={},callback=undefined){
+    if(typeof params == 'function'){
+      callback = params
+      params = {}
+    }
     if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
-
-    var data = await canvas.delete(this.getPath())
+    var data = await canvas.delete(this.getPath(),params)
     this.setData(data)
     this.send('delete')
   }

@@ -50,7 +50,7 @@ async function canvas(path, body, callback) {
     data: body,
     headers: {
       Authorization: 'Bearer '+settings.apiToken,
-      "Content-Type":"application/json"
+      "Content-Type":"application/json; charset=utf-8"
     }
   }
   
