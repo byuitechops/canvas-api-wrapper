@@ -1,18 +1,6 @@
 const util = require('util')
 const canvas = require('./canvas')
-
-/**
- * Parse the object if they use weird keys
- * @param {object} data 
- */
-function parse(data){
-  return Object.entries(data).reduce((obj,[key,value]) => {
-    var keys = key.replace(/]/g,'').split('[').map(n => n==''?0:n)
-    var node = keys.slice(0,-1).reduce((node,key,i) => node[key] = node[key] || (isNaN(keys[i+1])?{}:[]),obj)
-    node[keys[keys.length-1]] = value
-    return obj
-  },{})
-}
+const parse = require('./parse')
 
 /**
  * An abstract class which acts as a container for the different types of items
@@ -93,14 +81,20 @@ module.exports = class Items extends Array{
     })
   }
   /**
+   * Returns a flat list of all children's children
+   */
+  getFlattened(depth=1){
+    return this.reduce((arr,child) => arr.concat(child.getFlattened(depth)),[])
+  }
+  /**
    * Updates all of the items
    * @async
    * @param {Function} [callback] - If not specified, returns a promise
    */
-  async update(callback=undefined){
+  async update(alternateBody=undefined,callback=undefined){
     if(callback){return util.callbackify(this.update.bind(this))(...arguments)}
 
-    await Promise.all(this.map(item => item.update())) 
+    await Promise.all(this.map(item => item.update(alternateBody)))
   }
   /**
    * Creates an Item
@@ -125,10 +119,14 @@ module.exports = class Items extends Array{
    * @async
    * @param {function} [callback] - If not specified, returns a promise 
    */
-  async get(callback=undefined){
+  async get(query=undefined,callback=undefined){
+    if(typeof query == 'function'){
+      callback=query
+      query=undefined
+    }
     if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
 
-    var data = await canvas(this._constructItem().getPath(false))
+    var data = await canvas(this._constructItem().getPath(false),query)
     data.forEach(datum => {
       var item = this._classify(datum)
       var existing = this.find(n => n.getId() == item.getId())
@@ -145,9 +143,13 @@ module.exports = class Items extends Array{
    * @async
    * @param {function} [callback] - If not specified, returns a promise 
    */
-  async getComplete(callback=undefined){
+  async getComplete(query=undefined,callback=undefined){
+    if(typeof query == 'function'){
+      callback=query
+      query=undefined
+    }
     if(callback){return util.callbackify(this.getComplete.bind(this))(...arguments)}
-    await this.get()
+    await this.get(query)
     await Promise.all(this.map(item => item.getSub()))
     return this
   }
@@ -157,24 +159,38 @@ module.exports = class Items extends Array{
    * @param {number} id - The id of the item to get
    * @param {function} [callback] - If not specified, returns a promise 
    */
-  async getOne(id,callback=undefined){
+  async getOne(id,query=undefined,callback=undefined){
+    // Backwards compatability
+    if(typeof query == 'boolean'){
+      if(query == true){
+        return this.getOneComplete(id,callback)
+      }
+      query = undefined
+    } else if(typeof query == 'function'){
+      callback = query
+      query = undefined
+    }
     if(callback){return util.callbackify(this.getOne.bind(this))(...arguments)}
-    
+
     var existing = this.find(n => n.getId() == id)
     if(existing){
-      await existing.get()
+      await existing.get(query)
       return existing
     } else {
       var item = this._constructItem(id)
-      await item.get()
+      await item.get(query)
       this.push(item)
       return item
     }
   }
-  async getOneComplete(id,callback=undefined){
+  async getOneComplete(id,query=undefined,callback=undefined){
+    if(typeof query == 'function'){
+      callback=query
+      query=undefined
+    }
     if(callback){return util.callbackify(this.getOneComplete.bind(this))(...arguments)}
     
-    var item = await this.getOne(id)
+    var item = await this.getOne(id,query)
     await item.getSub()
     return item
   }
@@ -184,16 +200,16 @@ module.exports = class Items extends Array{
    * @param {number} id - The id of the item to delete
    * @param {function} [callback] If not specified, returns a promise 
    */
-  async delete(id,params={},callback=undefined){
-    if(typeof params == 'function'){
-      callback = params
-      params = {}
+  async delete(id,query=undefined,callback=undefined){
+    if(typeof query == 'function'){
+      callback = query
+      query = undefined
     }
     if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
 
     var foundIndex = this.findIndex(n => n.getId() == id)
     if(foundIndex != -1){
-      await this[foundIndex].delete(params)
+      await this[foundIndex].delete(query)
       // Might already be removed because of the event listeners
       foundIndex = this.findIndex(n => n.getId() == id)
       if(foundIndex != -1){
@@ -201,7 +217,24 @@ module.exports = class Items extends Array{
       }
     } else {
       var temp = this._constructItem(id)
-      temp.delete(params)
+      temp.delete(query)
     }
+  }
+
+  /* Backwards Compatability Aliases */
+  async getAll(includeSub=false,callback=undefined){
+    if(typeof includeSub == 'function'){
+      callback=includeSub
+      includeSub=false
+    }
+    if(callback){return util.callbackify(this.getAll.bind(this))(...arguments)}
+    if(includeSub){
+      return this.getComplete()
+    } else {
+      return this.get()
+    }
+  }
+  async updateAll(callback){
+    return this.update(callback)
   }
 }

@@ -2,6 +2,7 @@ const promiseLimit = require('promise-limit')
 const got = require('got')
 const url = require('url')
 const util = require('util')
+const parse = require('./parse')
 
 const settings = {
   apiToken: process.env.CANVAS_API_TOKEN || '',
@@ -37,7 +38,11 @@ async function canvas(method,path,body,callback) {
     throw new Error('Method was not get, post, put or delete')
   }
 
+  // Resolving the path
   path = new url.URL(url.resolve(baseUrl,path))
+
+  // Fixing Body if they use weird keys
+  body && (body = parse(body))
   
   var options = {
     // Resolving the path
@@ -92,7 +97,7 @@ async function canvas(method,path,body,callback) {
       settings.oncall({
         method:method.toUpperCase(),
         url: options.url,
-        body: options.data
+        body: body
       })
     }
 
@@ -178,4 +183,12 @@ module.exports = Object.defineProperties(canvas.bind(null,'GET'),{
       }
     }
   },
+  /* Backwards Compatability */
+  domain:{
+    set: val => {
+      settings.subdomain = val 
+      baseUrl = `https://${settings.subdomain}.instructure.com`
+    },
+    get: () => settings.subdomain
+  }
 })

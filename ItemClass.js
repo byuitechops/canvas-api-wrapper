@@ -1,5 +1,6 @@
 const util = require('util')
 const canvas = require('./canvas')
+const parse = require('./parse')
 
 /**
  * An abstract class for the different types of items to inherit from
@@ -110,10 +111,11 @@ module.exports = class Item {
   }
   /** @return {string} - item's html */
   getHtml(){
-    if(!this._html){
-      throw new TypeError("Class extending the Item class doesn't have a html property defined")
+    if(this._html){
+      return this[this._html] || ""
+    } else {
+      return undefined
     }
-    return this[this._html] || ""
   }
   /** @param {string} - item's html */
   setHtml(val){ 
@@ -123,11 +125,12 @@ module.exports = class Item {
     this[this._html] = val
   }
   /** @return {string} - item's title */
-  getTitle(){ 
-    if(!this._title){
-      throw new TypeError("Class extending the Item class doesn't have a title property defined")
+  getTitle(){
+    if(this._title){
+      return this[this._title] || ""
+    } else {
+      return undefined
     }
-    return this[this._title] || ""
   }
   /** @param {string} - item's title */
   setTitle(val){ 
@@ -137,15 +140,16 @@ module.exports = class Item {
     this[this._title] = val 
   }
   /** @return {string} - item's Url */
-  getUrl(){ 
-    if(!this._url){
-      throw new TypeError("Class extending the Item class doesn't have a url property defined")
-    }
+  getUrl(){
     if(this._url.includes('http')){
       return this._url
     } else {
       return this[this._url]
     }
+  }
+  /** @return {string} - name of this class */
+  getType(){
+    return this.constructor.name
   }
   /** @return {string} - item's id */
   getId(){ return this._id }
@@ -174,6 +178,12 @@ module.exports = class Item {
     ]
   }
   /**
+   * Returns a flat list of all children and their children
+   */
+  getFlattened(depth=1){
+    return this.getSubs().reduce((arr,children) => arr.concat(children.getFlattened(depth-1)),depth <= 0 ? [this] : [])
+  }
+  /**
    * Retrieves all of the sub items, and their sub items
    * @private
    */
@@ -188,11 +198,22 @@ module.exports = class Item {
    * @param {function} [callback] If not specified, returns a promise 
    * @return {Item} this
    */
-  async get(callback=undefined){
+  async get(query=undefined,callback=undefined){
+    // Backwards compatability
+    if(typeof query == 'boolean'){
+      if(query == true){
+        return this.getComplete(callback)
+      }
+      query = undefined
+    } else if(typeof query == 'function'){
+      callback = query
+      query = undefined
+    }
+
     // Fancy boilerplate to recursivly callbackify if there is a callback
     if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
     
-    var data = await canvas(this.getPath())
+    var data = await canvas(this.getPath(),query)
     
     this.setData(data)
     this.send('get')
@@ -206,6 +227,8 @@ module.exports = class Item {
    * @return {Item} this
    */
   async getComplete(callback=undefined){
+    if(callback){return util.callbackify(this.getComplete.bind(this))(...arguments)}
+
     await this.get()
     await this.getSub()
     this.send('getComplete')
@@ -217,17 +240,33 @@ module.exports = class Item {
    * @async
    * @param {function} [callback] If not specified, returns a promise 
    */
-  async update(callback=undefined){
-    if(callback){return util.callbackify(this.update.bind(this))(...arguments)}
-    // If nothing has changed then don't bother
-    var [thisChanged,childrenChanged] = this.getChanged()
-    if(thisChanged){
-      var data = await canvas.put(this.getPath(),this.getPostbody())
-      this.setData(data)
+  async update(alternateBody=undefined,callback=undefined){
+    if(typeof alternateBody == 'function'){
+      callback = alternateBody
+      alternateBody = undefined
     }
-    if(childrenChanged){
-      // Update all of the children as well
-      await Promise.all(this.getSubs().map(sub => sub.update()))
+    if(callback){return util.callbackify(this.update.bind(this))(...arguments)}
+    
+    // If they specify an alternate body then always post 
+    // regaurdless of whether things have actually changed
+    if(alternateBody){
+      alternateBody = parse(alternateBody)
+      if(this._post && !alternateBody[this._post]){
+        alternateBody = {[this._post]:alternateBody}
+      }
+      var data = await canvas.put(this.getPath(),alternateBody)
+      this.setData(data)
+    } else {
+      // If nothing has changed then don't bother
+      var [thisChanged,childrenChanged] = this.getChanged()
+      if(thisChanged){
+        var data = await canvas.put(this.getPath(),this.getPostbody())
+        this.setData(data)
+      }
+      if(childrenChanged){
+        // Update all of the children as well
+        await Promise.all(this.getSubs().map(sub => sub.update()))
+      }
     }
     this.send('update')
   }
@@ -236,13 +275,13 @@ module.exports = class Item {
   * @async
   * @param {function} [callback] If not specified, returns a promise 
   */
-  async delete(params={},callback=undefined){
-    if(typeof params == 'function'){
-      callback = params
-      params = {}
+  async delete(query=undefined,callback=undefined){
+    if(typeof query == 'function'){
+      callback = query
+      query = undefined
     }
     if(callback){return util.callbackify(this.delete.bind(this))(...arguments)}
-    var data = await canvas.delete(this.getPath(),params)
+    var data = await canvas.delete(this.getPath(),query)
     this.setData(data)
     this.send('delete')
   }
