@@ -1,6 +1,6 @@
 {
   "name": "canvas-api-wrapper",
-  "version": "3.2.0",
+  "version": "3.2.5",
   "description": "Simplifies the already simple canvas api calls, and handles pagenation",
   "main": "main.js",
   "scripts": {
@@ -22,14 +22,13 @@
   },
   "homepage": "https://github.com/byuitechops/canvas-api-wrapper#readme",
   "dependencies": {
-    "promise-limit": "^2.6.0",
-    "tiny-json-http": "^7.0.0"
+    "got": "^8.3.1",
+    "promise-limit": "^2.6.0"
   },
   "author": "Benjamin Earl",
   "license": "MIT",
   "devDependencies": {
     "better-assert": "^1.0.2",
-    "mocha": "^5.2.0",
-    "should": "^13.2.1"
+    "mocha": "^5.2.0"
   }
 }
