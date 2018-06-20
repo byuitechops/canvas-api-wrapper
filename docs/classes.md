@@ -1,6 +1,6 @@
 ![Diagram](./diagram.svg)
 
-### Course [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L78 "Source")
+### Course [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L73 "Source")
   
 *course*.**getType()** ➜ `"Course"` 
   
@@ -17,7 +17,7 @@
 *course*.**getUrl()** ➜ `"https://<subdomain>.instructure.com/courses/:id"` 
   
 
-### Assignment [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L112 "Source")
+### Assignment [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L107 "Source")
   
 *assignment*.**getType()** ➜ `"Assignment"` 
   
@@ -36,7 +36,7 @@
 *assignment*.**getUrl()** ➜ *assignment*.**html_url** 
   
 
-### Override [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L126 "Source")
+### Override [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L121 "Source")
   
 *override*.**getType()** ➜ `"Override"` 
   
@@ -51,7 +51,7 @@
 *override*.**getPath(false)** ➜ `"/api/v1/courses/:course/assignments/:assignment/overrides"` 
   
 
-### Submission [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L0 "Source")
+### Submission [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L126 "Source")
   
 *submission*.**getType()** ➜ `"Submission"` 
   
@@ -68,7 +68,7 @@
 *submission*.**getUrl()** ➜ *submission*.**preview_url** 
   
 
-### Discussion [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L143 "Source")
+### Discussion [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L138 "Source")
   
 *discussion*.**getType()** ➜ `"Discussion"` 
   
@@ -87,7 +87,7 @@
 *discussion*.**getUrl()** ➜ *discussion*.**html_url** 
   
 
-### Entry [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L153 "Source")
+### Entry [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L148 "Source")
   
 *entry*.**getType()** ➜ `"Entry"` 
   
@@ -102,7 +102,7 @@
 *entry*.**getPath(false)** ➜ `"/api/v1/courses/:course/discussion_topics/:discussion/entries"` 
   
 
-### Reply [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L172 "Source")
+### Reply [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L167 "Source")
   
 *reply*.**getType()** ➜ `"Reply"` 
   
@@ -117,7 +117,7 @@
 *reply*.**getPath(false)** ➜ `"/api/v1/courses/:course/discussion_topics/:discussion/entries/:entry/replies"` 
   
 
-### File [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L184 "Source")
+### File [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L179 "Source")
   
 *file*.**getType()** ➜ `"File"` 
   
@@ -134,7 +134,7 @@
 *file*.**getUrl()** ➜ `"https://<subdomain>.instructure.com/courses/:course/files/?preview=:id"` 
   
 
-### Folder [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L198 "Source")
+### Folder [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L193 "Source")
   
 *folder*.**getType()** ➜ `"Folder"` 
   
@@ -151,7 +151,7 @@
 *folder*.**getUrl()** ➜ *folder*.**folders_url** 
   
 
-### Module [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L203 "Source")
+### Module [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L198 "Source")
   
 *module*.**getType()** ➜ `"Module"` 
   
@@ -168,7 +168,7 @@
 *module*.**getUrl()** ➜ `"https://<subdomain>.instructure.com/courses/:course/modules#context_module_:id"` 
   
 
-### ModuleItem [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L0 "Source")
+### ModuleItem [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L208 "Source")
   
 *moduleitem*.**getType()** ➜ `"ModuleItem"` 
   
@@ -185,7 +185,7 @@
 *moduleitem*.**getUrl()** ➜ *moduleitem*.**html_url** 
   
 
-### Page [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L219 "Source")
+### Page [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L214 "Source")
   
 *page*.**getType()** ➜ `"Page"` 
   
@@ -204,7 +204,7 @@
 *page*.**getUrl()** ➜ *page*.**html_url** 
   
 
-### Quiz [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L232 "Source")
+### Quiz [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L227 "Source")
   
 *quiz*.**getType()** ➜ `"Quiz"` 
   
@@ -223,7 +223,7 @@
 *quiz*.**getUrl()** ➜ *quiz*.**html_url** 
   
 
-### Question [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L243 "Source")
+### Question [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L238 "Source")
   
 *question*.**getType()** ➜ `"Question"` 
   
@@ -242,7 +242,7 @@
 *question*.**getUrl()** ➜ `"https://<subdomain>.instructure.com/courses/:course/quizzes/:quiz/edit#question_:id"` 
   
 
-### GroupCategory [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L0 "Source")
+### GroupCategory [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L260 "Source")
   
 *groupcategory*.**getType()** ➜ `"GroupCategory"` 
   
@@ -259,7 +259,7 @@
 *groupcategory*.**getUrl()** ➜ `"https://<subdomain>.instructure.com/courses/:course/groups#tab-:id"` 
   
 
-### Group [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L274 "Source")
+### Group [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L269 "Source")
   
 *group*.**getType()** ➜ `"Group"` 
   
@@ -278,7 +278,7 @@
 *group*.**getUrl()** ➜ `"https://<subdomain>.instructure.com/groups/:groupcategory"` 
   
 
-### Membership [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L292 "Source")
+### Membership [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L287 "Source")
   
 *membership*.**getType()** ➜ `"Membership"` 
   

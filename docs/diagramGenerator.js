@@ -10,7 +10,7 @@ const classes = []
 function document(item){
   if(classes.find(n => n.type == item.getType())){ return }
   var documentation = {
-    line:source.findIndex(line => line.includes(item.getType().toLowerCase()+':{'))+1,
+    line:source.findIndex(line => line.match(new RegExp(`\\s${item.getType()}\\s*:\\s*{`,'i')))-4,
     type:item.getType(),
     name:item.getType().toLowerCase(),
     methods:[{
