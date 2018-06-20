@@ -2,6 +2,7 @@ const canvas = require('../main')
 const ejs = require('ejs')
 const fs = require('fs')
 const path = require('path')
+const source = fs.readFileSync(path.resolve(__dirname,'../api.js'),'utf-8').split('\n')
 canvas.subdomain = 'subdomain'
 
 const classes = []
@@ -9,6 +10,7 @@ const classes = []
 function document(item){
   if(classes.find(n => n.type == item.getType())){ return }
   var documentation = {
+    line:source.findIndex(line => line.includes(item.getType().toLowerCase()+':{'))+1,
     type:item.getType(),
     name:item.getType().toLowerCase(),
     methods:[{
@@ -28,13 +30,13 @@ function document(item){
       prop:item._html,
     },{
       method:'getPath()',
-      result:item.getPath()
+      result:`"${item.getPath()}"`
     },{
       method:'getPath(false)',
-      result:item.getPath(false)
+      result:`"${item.getPath(false)}"`
     },item._url && {
       method:'getUrl()',
-      [item._url.includes('http')?'result':'prop']:item._url.replace('subdomain','<subdomain>')
+      [item._url.includes('http')?'result':'prop']:item._url.includes('http') ? `"${item._url.replace('subdomain','<subdomain>')}"` : item._url
     }].filter(n => n),
     children:item._subs.map(n => ({name:n,type:item[n].childClass.name}))
   }
