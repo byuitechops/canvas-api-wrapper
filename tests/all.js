@@ -26,6 +26,37 @@ var tests = {
   question:{
     create: { question_name: 'test title' },
     update: { question_name: 'updated title' },
+  },
+  folder:{
+    create: { name: 'test name' },
+    update: { name: 'updated name' },
+    parent: course.folders
+  },
+  module:{
+    create: { name: 'test name' },
+    update: { name: 'updated name' },
+    parent: course.modules
+  },
+  moduleItem:{
+    create: { title: 'test title', type: 'SubHeader' },
+    update: { title: 'updated title'},
+  },
+  page:{
+    create: { title: 'test title' },
+    update: { title: 'updated title' }
+  },
+  groupCategory:{
+    create: { name: 'test name' },
+    update: { name: 'updated name'},
+    parent: course.groupCategories
+  },
+  group:{
+    create: { name: 'test name' },
+    update: { name: 'updated name'},
+  },
+  membership:{
+    create: { user_id: 'self' },
+    update: {}
   }
 }
 
@@ -35,6 +66,7 @@ Object.keys(tests).filter(name => tests[name].parent).forEach(stackIt)
 function stackIt(name){
   testIt(name)
   var children = (api[name].children || [])
+  children = Array.isArray(children) ? children : [children]
   children.filter(({name,type}) => tests[type]).forEach(({name,type}) => stackIt(type))
   deleteIt(name)
 }
@@ -97,7 +129,7 @@ function deleteIt(name){
       it('should get deleted without an error', async () => {
         await tests[name].parent.delete(tests[name].instance.getId())
       })
-      if(name != 'quiz'){
+      if(name != 'quiz' && name != 'moduleItem'){
         it('should\'nt be on canvas anymore', async () => {
           var error
           try {
