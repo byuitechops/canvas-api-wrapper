@@ -83,9 +83,9 @@ module.exports = {
     children:[{
       name:'assignments',
       type:'assignment'
-    // },{
-    //   name:'discussions',
-    //   type:'discussion'
+    },{
+      name:'discussions',
+      type:'discussion'
     },{
       name:'files',
       type:'file'
@@ -145,10 +145,10 @@ module.exports = {
     title:'title',
     html:'message',
     url:'html_url',
-    children:{
-      name:'entries',
-      type:'entry'
-    }
+    // children:{
+    //   name:'entries',
+    //   type:'entry'
+    // }
   },
   entry:{
     path:([,discussion]) => `discussion_topics/${discussion}/entries`,
