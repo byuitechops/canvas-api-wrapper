@@ -83,9 +83,13 @@ module.exports = class Items extends Array{
       return thisChanged || childrenChanged
     })
   }
-  /** @return {string} */
+  /** @return {string} - the class name */
   getType(){
     return this.constructor.name
+  }
+  /** @return {[string]} - list of parent ids [ to match the Item.getIds() ] */
+  getIds(){
+    return this.ids
   }
   /**
    * Returns a flat list of all children's children

@@ -152,7 +152,9 @@ module.exports = class Item {
   }
   /** @return {string} - item's id */
   getId(){ return this._id }
-  /** @return {string} - Parent's ids */
+  /** @return {[string]} - Parent's ids plus item's id */
+  getIds(){ return this._parents.concat([this._id]) }
+  /** @return {[string]} - Parent's ids */
   getParentIds(){ return this._parents }
   /** @return {[Items]} - array of subs */
   getSubs(){
