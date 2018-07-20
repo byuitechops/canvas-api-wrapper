@@ -152,6 +152,8 @@ module.exports = class Item {
   }
   /** @return {string} - item's id */
   getId(){ return this._id }
+  /** @return {string} - Parent's ids */
+  getParentIds(){ return this._parents }
   /** @return {[Items]} - array of subs */
   getSubs(){
     return this._subs.map(key => this[key])
@@ -170,9 +172,17 @@ module.exports = class Item {
     return temp
   }
   /**
+   * Returns whether this or its children have changed
+   * [ convience method to match the Items class ]
+   * @return {Boolean}
+   */
+  hasChanged(){
+    return this.getChanged().some(n => n)
+  }
+  /**
    * Checks to see if this item's properties have changed since the last setData
    * @private
-   * @return {false || Array[thisChanged,childrenChanged]}
+   * @return {Array[thisChanged,childrenChanged]}
    */
   getChanged(){
     return [
@@ -296,7 +306,12 @@ module.exports = class Item {
   async create(){
     var data = await canvas.post(this.getPath(false),this.getPostbody())
     this.setData(data)
-    this.getSubs().forEach(sub => sub.parentId = this._id)
+    // update our children so they know their parent's id
+    this.getSubs().forEach(sub => {
+      if(sub.ids[sub.ids.length-1] != this._id){
+        sub.ids.push(this._id)
+      }
+    })
     this.send('create')
     return this
   }

@@ -45,6 +45,11 @@ var example = {
   */
   html: 'description',
   /* 
+    [Optional] the property name of the id attribute. defaults to `id`
+    So far only pages uses a different one `page_id`
+  */
+  id: 'id',
+  /* 
     [Optional] the property name of the url attribute or a function 
     which takes the ids array and returns a uri to be resolved with the correct domain
     If undefined it will throw an error when getUrl is called
@@ -78,9 +83,9 @@ module.exports = {
     children:[{
       name:'assignments',
       type:'assignment'
-    },{
-      name:'discussions',
-      type:'discussion'
+    // },{
+    //   name:'discussions',
+    //   type:'discussion'
     },{
       name:'files',
       type:'file'
@@ -96,12 +101,12 @@ module.exports = {
     },{
       name:'quizzes',
       type:'quiz',
-    },{
-      name:'groupCategories',
-      type:'groupCategory'
-    },{
-      name:'groups',
-      type:'group'
+    // },{
+    //   name:'groupCategories',
+    //   type:'groupCategory'
+    // },{
+    //   name:'groups',
+    //   type:'group'
     }],
   },
   assignment:{
@@ -110,13 +115,13 @@ module.exports = {
     title:'name',
     html:'description',
     url:'html_url',
-    children:[{
-      name:'overrides',
-      type:'override'
-    },{
-      name:'submissions',
-      type:'submission'
-    }]
+    // children:[{
+    //   name:'overrides',
+    //   type:'override'
+    // },{
+    //   name:'submissions',
+    //   type:'submission'
+    // }]
   },
   override:{
     path: ([,assignment]) => `assignments/${assignment}/overrides`,
@@ -131,7 +136,7 @@ module.exports = {
     url:'preview_url',
     custom:{
       delete(){
-        throw new Error("Can't delete a reply")
+        throw new Error("Can't delete a submission")
       }
     }
   },

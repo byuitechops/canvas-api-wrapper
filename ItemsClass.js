@@ -133,10 +133,6 @@ module.exports = class Items extends Array{
     }
     if(callback){return util.callbackify(this.get.bind(this))(...arguments)}
 
-<<<<<<< HEAD
-    var data = await canvas(this._constructItem().getPath(false))
-    this.setData(data)
-=======
     var data = await canvas(this._constructItem().getPath(false),query)
     data.forEach(datum => {
       var item = this._classify(datum)
@@ -147,7 +143,6 @@ module.exports = class Items extends Array{
         this.push(item)
       }
     })
->>>>>>> f5f6c797e77aaa033cd993e58e44183d6e496bf5
     return this
   }
   /**
@@ -229,7 +224,7 @@ module.exports = class Items extends Array{
       }
     } else {
       var temp = this._constructItem(id)
-      temp.delete(query)
+      await temp.delete(query)
     }
   }
 

@@ -45,7 +45,6 @@ async function canvas(method,path,body,callback) {
   body && (body = parse(body))
   
   var options = {
-    // Resolving the path
     url: path.href,
     method:method,
     [method=='get' ? 'query' : 'body']: body,
