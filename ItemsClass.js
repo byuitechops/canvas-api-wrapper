@@ -4,35 +4,22 @@ const parse = require('./parse')
 
 /**
  * An abstract class which acts as a container for the different types of items
- * @public  @prop {number} course - the id of the course
- * @public  @prop {array}  items - the list of items it contains (only initalized after get functions)
+ * @public  @prop {array} ids - list of ids starting at courseId going to the leaf id
  * @private @abstract @prop {Class}  childClass - the class used for the children
  */
 module.exports = class Items extends Array{
-  constructor(id){
-    if(id == undefined){
-      throw new TypeError("Items expected the id of the course")
-    }
-    super()
-    Object.defineProperties(this,{
-      childClass:{
-        writable:true,
-      },
-      course:{
-        writable:true,
-        value:id
-      },
-      parentId:{
-        writable:true,
-      }
-    })
-  }
   /**
    * Not really sure what this line does, 
    * but it makes things not mess up as badly when doing slice and such
    * ( doing slice on this class returns just the array of sub items without this class wrapping it )
    */
   static get [Symbol.species]() { return Array; }
+  /**
+   * Coerce to Array when console.logging
+   */
+  [util.inspect.custom](depth,options){
+    return this.constructor.name+' '+util.inspect(Array.from(this),options)
+  }
   /**
    * Attaches the delete event listener, so that we can remove it from the list if it
    * get removed independently
@@ -56,7 +43,7 @@ module.exports = class Items extends Array{
     if(!this.childClass){
       throw new TypeError("Classes extending the Items class needs childClass defined")
     }
-    var item = new this.childClass(this.course,id)
+    var item = new this.childClass(this.ids,id)
     this._attachListeners(item)
     return item
   }
@@ -67,9 +54,25 @@ module.exports = class Items extends Array{
    * @return {Item}
    */
   _classify(data){
-    var item = this._constructItem(data[this.childClass.idProp])
+    var item = this._constructItem()
     item.setData(data)
     return item
+  }
+  /**
+   * Need to add this function so that functions in the api don't screw things up
+   * @private
+   * @param {array} data - array of items to add
+   */
+  setData(data){
+    data.forEach(datum => {
+      var item = this._classify(datum)
+      var existing = this.find(n => n.getId() == item.getId())
+      if(existing){
+        existing.setData(datum)
+      } else {
+        this.push(item)
+      }
+    })
   }
   /**
    * Any of the childern have changed
@@ -79,6 +82,10 @@ module.exports = class Items extends Array{
       var [thisChanged,childrenChanged] = item.getChanged()
       return thisChanged || childrenChanged
     })
+  }
+  /** @return {string} */
+  getType(){
+    return this.constructor.name
   }
   /**
    * Returns a flat list of all children's children
@@ -102,7 +109,7 @@ module.exports = class Items extends Array{
    * @param {Object} data - The properties used to create the item
    * @param {Function} [callback] - If not specified, returns a promise 
    */
-  async create(data, callback=undefined){
+  async create(data={}, callback=undefined){
 
     if(callback){return util.callbackify(this.create.bind(this))(...arguments)}
 
@@ -217,7 +224,7 @@ module.exports = class Items extends Array{
       }
     } else {
       var temp = this._constructItem(id)
-      temp.delete(query)
+      await temp.delete(query)
     }
   }
 

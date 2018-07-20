@@ -1,0 +1,7 @@
+![Diagram](./diagram.svg)
+<% classes.forEach(item => { %>
+### <%= item.type %> [<>](https://github.com/byuitechops/canvas-api-wrapper/blob/api/api.js#L<%= item.line %> "Source")
+  <% item.methods.forEach(method => { %>
+*<%= item.name %>*.**<%= method.method %>** ➜<% if(method.prop){ %> *<%= item.name %>*.**<%= method.prop %>** <% } else { %> `<%- method.result %>` <% } %>
+  <% }) %>
+<% }) %>

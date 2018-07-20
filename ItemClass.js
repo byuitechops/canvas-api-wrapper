@@ -14,27 +14,6 @@ const parse = require('./parse')
  * @private @abstract @prop {string} _title - the property name to access the title of the object
  */
 module.exports = class Item {
-  constructor(course,id){
-    Object.defineProperties(this,{
-      _course:{ value:course },
-      _id: {
-        value:id,
-        writable: true,
-      },
-      _original: { writable: true },
-      _subs: { 
-        value: [],
-        writable: true 
-      },
-      _post: { writable: true },
-      _path: { writable: true },
-      _html: { writable: true },
-      _title: { writable: true },
-      _url: { writable: true },
-      _listeners: { value: {} }
-    })
-  }
-  static get idProp(){ return 'id' }
   /**
    * Attach event listener, don't really know when you would use
    * these so they aren't documented. I only needed them so that 
@@ -81,6 +60,14 @@ module.exports = class Item {
     }
     // Save the data
     Object.assign(this,data)
+    if(data[this._idProp] != undefined){
+      this._id = data[this._idProp]
+      this.getSubs().forEach(sub => {
+        if(sub.ids[sub.ids.length-1] != this._id){
+          sub.ids.push(this._id)
+        }
+      })
+    }
     this._original = JSON.stringify(this)
   }
   /**
@@ -103,11 +90,23 @@ module.exports = class Item {
    * @param {boolean} includeId 
    * @return {string} - path
    */
-  getPath(includeId=true){
+  getPath(individual=true){
     if(!this._path){
       throw new TypeError("Class extending the Item class doesn't have path defined")
     }
-    return `/api/v1/courses/${this._course}/${this._path}/${includeId ? this._id : ''}`
+    let path = this._path, includeCourse=true
+    if(typeof this._path == 'function'){
+      path = path(this._parents,individual)
+    }
+    if(Array.isArray(path)){
+      [path,includeCourse=true] = path
+    }
+    return [
+      '/api/v1',
+      includeCourse && 'courses/'+this._parents[0],
+      path.replace(/^\/|\/$/g,''),
+      individual && String(this._id)
+    ].filter(n => n).join('/')
   }
   /** @return {string} - item's html */
   getHtml(){
@@ -153,9 +152,15 @@ module.exports = class Item {
   }
   /** @return {string} - item's id */
   getId(){ return this._id }
+  /** @return {string} - Parent's ids */
+  getParentIds(){ return this._parents }
   /** @return {[Items]} - array of subs */
   getSubs(){
     return this._subs.map(key => this[key])
+  }
+  /** @return {string} */
+  getType(){
+    return this.constructor.name
   }
   /**
    * @private
@@ -167,9 +172,17 @@ module.exports = class Item {
     return temp
   }
   /**
+   * Returns whether this or its children have changed
+   * [ convience method to match the Items class ]
+   * @return {Boolean}
+   */
+  hasChanged(){
+    return this.getChanged().some(n => n)
+  }
+  /**
    * Checks to see if this item's properties have changed since the last setData
    * @private
-   * @return {false || Array[thisChanged,childrenChanged]}
+   * @return {Array[thisChanged,childrenChanged]}
    */
   getChanged(){
     return [
@@ -293,8 +306,12 @@ module.exports = class Item {
   async create(){
     var data = await canvas.post(this.getPath(false),this.getPostbody())
     this.setData(data)
-    this._id = data[this.constructor.idProp]
-    this.getSubs().forEach(sub => sub.parentId = this._id)
+    // update our children so they know their parent's id
+    this.getSubs().forEach(sub => {
+      if(sub.ids[sub.ids.length-1] != this._id){
+        sub.ids.push(this._id)
+      }
+    })
     this.send('create')
     return this
   }

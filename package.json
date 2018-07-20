@@ -1,10 +1,11 @@
 {
   "name": "canvas-api-wrapper",
-  "version": "3.2.5",
+  "version": "3.3.0",
   "description": "Simplifies the already simple canvas api calls, and handles pagenation",
   "main": "main.js",
   "scripts": {
-    "test": "mocha tests/pages"
+    "test": "mocha tests",
+    "docs": "node ./docs/diagramGenerator.js && node ./node_modules/mermaid.cli/index.bundle.js -i docs/diagram.mmd -o docs/diagram.svg"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,8 @@
   "license": "MIT",
   "devDependencies": {
     "better-assert": "^1.0.2",
+    "ejs": "^2.6.1",
+    "mermaid.cli": "^0.5.1",
     "mocha": "^5.2.0"
   }
 }

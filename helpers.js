@@ -1,317 +1,105 @@
-const canvas = require('./canvas')
+const api = require('./api')
 const Items = require('./ItemsClass')
 const Item = require('./ItemClass')
+const canvas = require('./canvas')
+const URL = require('url')
 
-/***********************
-* Course
-************************/
-class Course extends Item{
-  constructor(course){
-    super(course,course)
-
-    this._post = 'course'
-    this._title = 'name'
-    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}`
-    this._subs = ['files','folders','assignments','discussions','modules','pages','quizzes','groups']
-
+/**
+ * Creates a class which inherits from the Item class and has a constructor
+ * which implements the settings found in the settings object. Also passed
+ * in is the name which is used to title the class
+ * @param {string} name 
+ * @param {object} settings 
+ */
+function createItemClass(name,settings){
+  // Checking our required parameters
+  if(settings.path === undefined){
+    throw new TypeError("path needs to be defined in the settings")
+  }
+  // Setting all of the defaults
+  settings.children = settings.children || []
+  settings.children = Array.isArray(settings.children) ? settings.children : [settings.children]
+  settings.id = settings.id != undefined ? settings.id : 'id'
+  // The constructor for the new class
+  function item(parents,id){
+    if(parents == undefined){
+      throw new TypeError('Needs to be created with the ids')
+    }
+    const ids = parents.concat(id!=undefined ? [id] : [])
+    // Resolving the functions in the settings
+    let url = settings.url
+    if(typeof url == 'function'){
+      url = URL.resolve(`https://${canvas.subdomain}.instructure.com`,url(ids))
+    }
+    // Defining all of the private properties
     Object.defineProperties(this,{
-      files: {
-        value:new Files(course),
-        enumerable:true
+      _parents:{ value:parents },
+      _id: {
+        value:id,
+        writable: true,
       },
-      folders: {
-        value:new Folders(course),
-        enumerable: true
-      },
-      assignments: {
-        value:new Assignments(course),
-        enumerable:true
-      },
-      discussions: {
-        value:new Discussions(course),
-        enumerable:true
-      },
-      modules: {
-        value:new Modules(course),
-        enumerable:true
-      },
-      pages: {
-        value:new Pages(course),
-        enumerable:true
-      },
-      quizzes: {
-        value:new Quizzes(course),
-        enumerable:true
-      },
-      groups:{
-        value:new Groups(course),
+      _original: { writable: true },
+      _subs: { value: settings.children.map(child => child.name) },
+      _path: { value: settings.path },
+      _post: { value: settings.postbody },
+      _html: { value: settings.html },
+      _title: { value: settings.title },
+      _url: { value: url },
+      _listeners: { value: {} },
+      _idProp: {value: settings.id }
+    })
+    // Defining all of the children
+    Object.defineProperties(this,settings.children.reduce((obj,child) => {
+      var Class = createItemsClass(child)
+      obj[child.name] = {
+        value: new Class(ids),
         enumerable:true
       }
-    })
+      return obj
+    },{}))
   }
-  getPath(){
-    return `/api/v1/courses/${this._course}`
-  }
+  // Making our function inherit from the Item class
+  item.prototype = Object.create(Item.prototype)
+  item.prototype.constructor = item
+  Object.assign(item.prototype,settings.custom)
+  // Setting the name of the class
+  Object.defineProperty(item,'name',{
+    value: name.slice(0,1).toUpperCase() + name.slice(1)
+  })
+  return item
 }
 
-/***********************
-* Assignments
-************************/
-class Assignments extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = Assignment
-  }
-}
-class Assignment extends Item {
-  constructor(course,id){
-    super(course,id)
-    this._path = 'assignments'
-    this._post = 'assignment'
-    this._title = 'name'
-    this._html = 'description'
-    this._url = 'html_url'
-  }
-}
-/***********************
-* Discussions
-************************/
-class Discussions extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = Discussion
-  }
-}
-class Discussion extends Item {
-  constructor(course,id){
-    super(course,id)
-    this._path = 'discussion_topics'
-    this._title = 'title'
-    this._html = 'message'
-    this._url = 'html_url'
-  }
-}
-/***********************
-* Files
-************************/
-class Files extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = File
-    delete this.create
-  }
-}
-class File extends Item {
-  constructor(course,id){
-    super(course,id)
-    this._path = 'files'
-    this._title = 'display_name'
-    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/files/?preview=${this._id}`
-    delete this.create
-  }
-  setTitle(value){
-    super.setTitle(value)
-    this.name = value
-  }
-  getPath(includeId=true){
-    if(!includeId){
-      return super.getPath(false)
+/**
+ * Creates a class which inherits from the Items class
+ * @param {string} name - what the class should be named
+ * @param {string} type - the name of it's children type
+ */
+function createItemsClass({name,type}){
+  function items(ids){
+    if(ids == undefined){
+      throw new TypeError('Needs to be created with the ids')
     }
-    return `/api/v1/files/${this._id}`
-  }
-}
-/***********************
-* Folders
-************************/
-class Folders extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = Folder
-  }
-}
-class Folder extends Item {
-  constructor(course,id){
-    super(course,id)
-    this._path = 'folders'
-    this._title = 'name'
-    this._url = 'folders_url'
-  }
-  getPath(includeId=true){
-    if(!includeId){
-      return super.getPath(false)
-    }
-    return `/api/v1/folders/${this._id}`
-  }
-}
-/***********************
-* Modules
-************************/
-class Modules extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = Module
-  }
-}
-class Module extends Item {
-  constructor(course,id){
-    super(course,id)
-    this._path = 'modules'
-    this._post = 'module'
-    this._title = 'name'
-    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/modules#context_module_${this._id}`
-    this._subs = ['moduleItems']
-    Object.defineProperty(this,'moduleItems',{
-      value:new ModuleItems(course,id),
-      enumerable:true,
+    Array.call(this)
+    Object.defineProperties(this,{
+      childClass:{ value:createItemClass(type,api[type]) },
+      ids:{ value: ids }
     })
   }
-}
-class ModuleItems extends Items {
-  constructor(courseId,moduleId){
-    super(courseId)
-    this.parentId = moduleId
-    this.childClass = ModuleItem
-  }
-  _constructItem(id){
-    var item = new ModuleItem(this.course,this.parentId,id)
-    super._attachListeners(item)
-    return item
-  }
-}
-class ModuleItem extends Item {
-  constructor(course,module,id){
-    super(course,id)
-    Object.defineProperty(this,'_module',{value:module})
-    this._path = `modules/${this._module}/items`
-    this._post = 'module_item'
-    this._title = 'title'
-    this._url = 'html_url'
-  }
-}
-/***********************
-* Pages
-************************/
-class Pages extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = Page
-  }
-}
-class Page extends Item {
-  static get idProp(){ return 'page_id'}
-  constructor(course,id){
-    super(course,id)
-    this._path = 'pages'
-    this._post = 'wiki_page'
-    this._title = 'title'
-    this._html = 'body'
-    this._url = 'html_url'
-  }
-  async getSub(){
-    return this.get()
-  }
-}
-/***********************
-* Quizzes
-************************/
-class Quizzes extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = Quiz
-  }
-}
-class Quiz extends Item {
-  constructor(course,id){
-    super(course,id)
-    this._path = 'quizzes'
-    this._post = 'quiz'
-    this._title = 'title'
-    this._html = 'description'
-    this._url = 'html_url'
-    this._subs = ['questions']
-    Object.defineProperty(this,'questions',{
-      value: new QuizQuestions(course,this.getId()),
-      enumerable:true
-    })
-  }
-}
-class QuizQuestions extends Items {
-  constructor(courseId,quizId){
-    super(courseId)
-    this.childClass = Quiz
-    this.parentId = quizId
-  }
-  _constructItem(id){
-    var item = new QuizQuestion(this.course,this.parentId,id)
-    super._attachListeners(item)
-    return item
-  }
-}
-class QuizQuestion extends Item {
-  constructor(course,quiz,id){
-    super(course,id)
-    Object.defineProperty(this,'_quiz',{value:quiz,writable:false})
-    this._path = `quizzes/${this._quiz}/questions`
-    this._post = 'question'
-    this._title = 'question_name'
-    this._html = 'question_text'
-    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/quizzes/${this._quiz}/edit#question_${this._id}`
-  }
-}
-/***********************
-* Groups
-************************/
-class Groups extends Items {
-  constructor(id){
-    super(id)
-    this.childClass = Group
-  }
-}
-class Group extends Item {
-  constructor(course,id){
-    super(course,id)
-    this._path = 'groups'
-    this._title = 'name'
-    this._html = 'description'
-    this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/groups#tab-${this._id}`
-    this._subs = ['memberships']
-    Object.defineProperty(this,'memberships',{
-      value: new Memberships(course,this.getId()),
-      enumerable:true
-    })
-  }
-  getPath(includeId=true){
-    return includeId ? `/api/v1/groups/${this._id}` : super.getPath(false)
-  }
-}
-class Memberships extends Items {
-  constructor(courseId,groupId){
-    super(courseId)
-    this.childClass = Membership
-    this.parentId = groupId
-  }
-  _constructItem(id){
-    var item = new Membership(this.course,this.parentId,id)
-    super._attachListeners(item)
-    return item
-  }
-}
-class Membership extends Item {
-  constructor(course,group,id){
-    super(course,id)
-    Object.defineProperty(this,'_group',{value:group,writable:false})
-    // this._url = `https://${canvas.subdomain}.instructure.com/courses/${this._course}/quizzes/${this._quiz}/edit#question_${this._id}`
-  }
-  getPath(includeId=true){
-    return `/api/v1/groups/${this._group}/memberships/${includeId ? this._id : ''}`
-  }
+  items.prototype = Object.create(Items.prototype)
+  items.prototype.constructor = items
+  Object.defineProperty(items,'name',{
+    value: name.slice(0,1).toUpperCase() + name.slice(1)
+  })
+  return items
 }
 
-// All of this file's exports will be added to the main canvas object
+// Creating the Course class for when they ask for it
+const Course = createItemClass('course',api.course)
+
 module.exports.getCourse = function getCourse(id){
   if(id == undefined){
     throw new TypeError("Expected the id of the course")
   }
-  var course = new Course(id)
+  var course = new Course([],id)
   return course
 }

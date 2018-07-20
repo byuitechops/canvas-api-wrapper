@@ -1,0 +1,7 @@
+graph TD
+<% classes.forEach(item => { -%>
+  <%= item.type %>
+  <% item.children.forEach(child => { -%>
+    <%= item.type %> -->|<em><%= item.name %></em>.<strong><%= child.name %></strong>&#x2001;.| <%= child.type %>
+  <% }) %>
+<% }) %>
