@@ -51,7 +51,7 @@ canvas.apiToken = "<TOKEN>"
 $env:CANVAS_API_TOKEN="<TOKEN>"
 
 # CMD
-set CANVAS_API_TOKEN="<TOKEN>"
+set CANVAS_API_TOKEN=<TOKEN>
 
 # Linux & Mac
 export CANVAS_API_TOKEN="<TOKEN>"
