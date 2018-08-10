@@ -140,7 +140,9 @@ module.exports = class Item {
   }
   /** @return {string} - item's Url */
   getUrl(){
-    if(this._url.includes('http')){
+    if(typeof this._url == 'function'){
+      return this._url(this.getIds())
+    } else if(this._url.includes('http')){
       return this._url
     } else {
       return this[this._url]

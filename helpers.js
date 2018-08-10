@@ -25,7 +25,7 @@ function createItemClass(name,settings){
     if(parents == undefined){
       throw new TypeError('Needs to be created with the ids')
     }
-    const ids = parents.concat(id!=undefined ? [id] : [])
+    const ids = parents.concat(id!=undefined ? id : [])
     // Resolving the functions in the settings
     let url = settings.url
     if(typeof url == 'function'){
@@ -44,7 +44,7 @@ function createItemClass(name,settings){
       _post: { value: settings.postbody },
       _html: { value: settings.html },
       _title: { value: settings.title },
-      _url: { value: url },
+      _url: { value: settings.url },
       _listeners: { value: {} },
       _idProp: {value: settings.id }
     })
