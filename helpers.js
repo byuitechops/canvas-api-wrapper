@@ -29,7 +29,7 @@ function createItemClass(name,settings){
     // Resolving the functions in the settings
     let url = settings.url
     if(typeof url == 'function'){
-      url = URL.resolve(`https://${canvas.subdomain}.instructure.com`,url(ids))
+      url = (ids) => URL.resolve(`https://${canvas.subdomain}.instructure.com`,settings.url(ids))
     }
     // Defining all of the private properties
     Object.defineProperties(this,{
@@ -44,7 +44,7 @@ function createItemClass(name,settings){
       _post: { value: settings.postbody },
       _html: { value: settings.html },
       _title: { value: settings.title },
-      _url: { value: settings.url },
+      _url: { value: url },
       _listeners: { value: {} },
       _idProp: {value: settings.id }
     })
