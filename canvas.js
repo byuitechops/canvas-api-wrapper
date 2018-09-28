@@ -40,20 +40,26 @@ async function canvas(method,path,body,callback) {
 
   // Resolving the path
   path = new url.URL(url.resolve(baseUrl,path))
-
-  // Fixing Body if they use weird keys
-  body && (body = parse(body))
   
+  // Fixing Body if they use weird keys
+  if(body) body = parse(body)
+
+  // Append the query parameters
+  if(body && method=='GET') assign(path.searchParams,body)
+
   var options = {
     url: path.href,
     method:method,
-    [method=='get' ? 'query' : 'body']: body,
     json: true,
     throwHttpErrors:false,
     headers: {
       Authorization: 'Bearer '+settings.apiToken,
     }
   }
+
+  // Adding body to options
+  if(method != 'GET') options.body = body
+
   
   // Make the request (with the timing checks and stuff)
   let response = await queue(async () => {
@@ -124,6 +130,7 @@ async function canvas(method,path,body,callback) {
     if(links.last){
       let path = new url.URL(links.current.path)
       responses = await Promise.all(Array(links.last.page-1).fill().map((n,i) => i+2).map(page => {
+
         path.searchParams.set('page',page)
         return canvas('GET',path.href)
       }))
@@ -158,6 +165,22 @@ function parseLink(str){
       .map(str => str.match(/<(.*?page=(\d+).*?)>.*?"(.*?)"/))
       .reduce((obj,elm) => {obj[elm[3]] = {path:elm[1],page:elm[2]}; return obj},{})
   }
+}
+
+// Canvas has a non-standard way of forming nested querystrings, so do it ourself
+function assign(params,obj){
+  function recurse(obj,stub=''){
+    for(var key in obj){
+      var entry = stub ? `[${Array.isArray(obj) ? '' : key}]` : key
+      if(typeof obj[key] == 'object'){
+        recurse(obj[key],stub+entry)
+      } else {
+        params.append(stub+entry,obj[key])
+      }
+    }
+  }
+  recurse(obj)
+  return params
 }
 
 module.exports = Object.defineProperties(canvas.bind(null,'GET'),{
