@@ -8,15 +8,21 @@ const settings = {
   apiToken: process.env.CANVAS_API_TOKEN || '',
   minSendInterval: 10,
   checkStatusInterval: 2000,
-  subdomain:'byui'
+  subdomain:'byui',
+  get baseUrl(){
+    return `https://${this.subdomain}.instructure.com`
+  },
+  set baseUrl(val){
+    delete this.baseUrl
+    this.baseUrl = val
+  }
 }
 
 // I hate global variables, but somehow I need to save info from call to call
 let queue = promiseLimit(30),
   nextSendTime = Date.now(),
   lastOverBuffer = 0,
-  rateLimitRemaining = 700,
-  baseUrl = `https://${settings.subdomain}.instructure.com`
+  rateLimitRemaining = 700
 
 // The center of the universe
 async function canvas(method,path,body,callback) {
@@ -39,7 +45,7 @@ async function canvas(method,path,body,callback) {
   }
 
   // Resolving the path
-  path = new url.URL(url.resolve(baseUrl,path))
+  path = new url.URL(url.resolve(settings.baseUrl,path))
   
   // Fixing Body if they use weird keys
   if(body) body = parse(body)
@@ -74,11 +80,11 @@ async function canvas(method,path,body,callback) {
       await new Promise(res => setTimeout(res,settings.checkStatusInterval))
       // See what the situation is now
       try{
-        let response = await got.head(url.resolve(baseUrl,'/api/v1/users/self'),{
+        let response = await got.head(url.resolve(settings.baseUrl,'/api/v1/users/self'),{
           headers:{
             Authorization: 'Bearer '+settings.apiToken
           }
-        })
+        }) 
         rateLimitRemaining = response.headers['x-rate-limit-remaining']
       } catch(e){
         // We couldn't even make the check
@@ -198,9 +204,15 @@ module.exports = Object.defineProperties(canvas.bind(null,'GET'),{
   subdomain:{
     set: val => {
       settings.subdomain = val 
-      baseUrl = `https://${settings.subdomain}.instructure.com`
     },
     get: () => settings.subdomain
+  },
+  baseUrl:{
+    set: val => {
+      if(typeof val != 'string') throw new TypeError('BaseUrl must be a string')
+      settings.baseUrl = val
+    },
+    get: () => settings.baseUrl
   },
   callLimit:{
     set: val => {
@@ -215,7 +227,6 @@ module.exports = Object.defineProperties(canvas.bind(null,'GET'),{
   domain:{
     set: val => {
       settings.subdomain = val 
-      baseUrl = `https://${settings.subdomain}.instructure.com`
     },
     get: () => settings.subdomain
   }

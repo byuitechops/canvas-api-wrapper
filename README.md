@@ -62,9 +62,19 @@ This library handles all of the throttling, so that you won't go over your
 rate limit. But you may want to tweek the settings to speed it up or slow it 
 down
 ```js
-// the subdomain under canvas 
+// the subdomain to be used in the default baseUrl
 //  https://<subdomain>.instructure.com
 canvas.subdomain = 'byui';
+
+// The baseUrl to be used. Useful to overwrite when running
+// a dev/local version of the canvas-lms. 
+// 
+//   canvas.baseUrl = https://localhost:8080
+//
+// The default will use the 
+// subdomain setting as the subdomain, this functionality
+// is not avaliable if over written
+canvas.baseUrl = 'https://<subdomain>.instructure.com'
 
 // Canvas uses a rate-limit point system to handle spamming. Canvas
 // currently fills your account to 700 'points' though subject to change
