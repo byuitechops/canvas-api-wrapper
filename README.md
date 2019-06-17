@@ -33,9 +33,15 @@ await course.update()
 
 ## Get Started
 #### Install
+
+```sh
+# Outdated
+$ npm i --save canvas-api-wrapper
+
+# Updated
+$ npm i --save git@https://github.com/byuitechops/canvas-api-wrapper.git
 ```
-npm i --save canvas-api-wrapper
-```
+
 #### Setup
 ``` javascript
 var canvas = require('canvas-api-wrapper')
