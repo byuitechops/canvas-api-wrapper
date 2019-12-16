@@ -27,27 +27,32 @@ let queue = promiseLimit(30),
 
 // The center of the universe
 async function canvas(method, path, body, callback) {
+    // Fix the parameters
+    if (typeof body == 'function') {
+        callback = body;
+        body = undefined;
+    }
+    // Callback-y stuff. Ask Ben.
+    if (callback) {
+        return util.callbackify(canvasGuts)(method, path, body, (err, data)=>{
+            if (err)
+            {
+                return callback(err, null);
+            }
+            callback(null, data.body);
+        });
+    }
     var response = await canvasGuts(method, path, body, callback);
     return response.body;
 }
 
-async function canvasGuts(method, path, body, callback) {
+async function canvasGuts(method, path, body) {
     // Don't let the queue build up too high
     while (queue.queue > 40) await new Promise(res => setTimeout(res, 500));
 
     // Check the Api Token
     if (!settings.apiToken) throw new Error('Canvas API Token was not set');
 
-    // Fix the parameters
-    if (typeof body == 'function') {
-        callback = body;
-        body = undefined;
-    }
-
-    // Force it to be a Promise
-    if (callback) {
-        return util.callbackify(canvas)(method, path, body, callback);
-    }
 
     // Fix the Method
     method = method.toUpperCase();
