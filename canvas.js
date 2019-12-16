@@ -27,6 +27,11 @@ let queue = promiseLimit(30),
 
 // The center of the universe
 async function canvas(method, path, body, callback) {
+    var response = await canvasGuts(method, path, body, callback);
+    return response.body;
+}
+
+async function canvasGuts(method, path, body, callback) {
     // Don't let the queue build up too high
     while (queue.queue > 40) await new Promise(res => setTimeout(res, 500));
 
@@ -123,11 +128,21 @@ async function canvas(method, path, body, callback) {
         // Finally make the actual call
         return got(path.href, options).then(res => {
             if (res.statusCode !== 304 && (res.statusCode < 200 || res.statusCode > 299)) {
-                throw new Error([
-                    `${method.toUpperCase()} ${path.href} failed with: ${res.statusCode}`,
-                    body && `${method=='get'?'Query Object':'Request Body'}\n\t${util.inspect(body,{depth:null})}`,
-                    typeof res.body == 'object' && `Response Body:\n\t${util.inspect(res.body,{depth:null})}`
-                ].filter(n => n).join('\n    '));
+                var bodyString = '';
+                var details;
+                if (body !== undefined) {
+                    var title = method === 'get' ? 'Query Object' : 'Request Body'
+                    bodyString = util.inspect(body, { depth: null });
+                    details += `${title}\n\t${bodyString}`;
+                }
+
+                if (typeof res.body === 'object') {
+                    resBody = util.inspect(res.body, { depth: null });
+                    details += `\n\tResponse Body:\n\t${resBody}`;
+                }
+
+                var message = `${method.toUpperCase()} ${path.href} failed with: ${res.statusCode} \n\t${details}`;
+                throw new Error(message);
             }
             return res;
         });
@@ -138,25 +153,18 @@ async function canvas(method, path, body, callback) {
     // console.log(Math.floor(this.RateLimitRemaining),Number(response.headers['x-request-cost']).toFixed(3))
     // Turn my links string into a useful object
     let links = parseLink(response.headers.link);
-    // Paginate recursivly if need to paginate
-    if (links && links.current.page == 1) {
+    // Paginate recursively if need to paginate
+    //only loop if we are on the first page by checking if they don't have previous page as per documentation
+    if (links && links.prev === undefined) {
         let responses = [];
-        if (links.last) {
-            let path = new url.URL(links.current.path);
-            responses = await Promise.all(Array(links.last.page - 1).fill().map((n, i) => i + 2).map(page => {
-
-                path.searchParams.set('page', page);
-                return canvas('GET', path.href);
-            }));
-        } else {
-            let path = new url.URL(links.current.path);
-            for (var page = 2, r = ['start']; r.length; page++) {
-                path.searchParams.set('page', page);
-                r = await canvas('GET', path.href);
-                responses.push(r);
-            }
+        //go till we don't have a next which means we are on last. There is not always a last set.
+        while (links.next !== undefined) {
+            let pageResponse = await canvasGuts('GET', links.next);
+            responses.push(pageResponse.body);
+            links = parseLink(pageResponse.headers.link)
         }
         try {
+            // put all the pages together
             if (!Array.isArray(response.body)) {
                 if (Object.keys(response.body).length != 1) throw Error();
                 var key = Object.keys(response.body)[0];
@@ -168,19 +176,22 @@ async function canvas(method, path, body, callback) {
             throw new Error('Assumption that paginating body is always an array or has only one property, was wrong');
         }
     }
-    return response.body;
+    return response;
 }
 
 // Parses canvas's crazy pagination method
 function parseLink(str) {
     if (str) {
         return str.split(',')
-            .map(str => str.match(/<(.*?page=(\d+).*?)>.*?"(.*?)"/))
-            .reduce((obj, elm) => {
-                obj[elm[3]] = {
-                    path: elm[1],
-                    page: elm[2]
-                };
+            .reduce((obj, link) => {
+                // get the link parts
+                let [urlBack, rel] = link.split(';');
+
+                //Get just the rel name using capturing groups
+                rel = rel.match(/rel="([a-z]+)"/i)[1];
+                //Get just the url using capturing groups
+                urlBack = urlBack.match(/<(.*)>/)[1];
+                obj[rel] = urlBack;
                 return obj;
             }, {});
     }
